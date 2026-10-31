@@ -1,0 +1,8 @@
+services:
+  dwsim-mcp:
+    image: ghcr.io/friendlypeps/dwsim-mcp:10.2
+    container_name: dwsim-mcp
+    ports:
+      - "5901:5901"
+    # command: ["--token", "change-me"]
+    restart: unless-stopped

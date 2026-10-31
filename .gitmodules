@@ -1,0 +1,5 @@
+[submodule "external/dwsim10"]
+	path = external/dwsim10
+	url = https://github.com/DanWBR/dwsim10
+	shallow = true
+	branch = master

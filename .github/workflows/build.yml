@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('external/dwsim10/Directory.Packages.props', '.gitmodules') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Build
+        run: dotnet build DWSIM-MCP.slnx -c Release -nologo -clp:ErrorsOnly
+
+      - name: Test
+        run: dotnet test DWSIM-MCP.slnx -c Release --no-build -nologo --logger "trx;LogFileName=results.trx"
+
+      - name: List tools
+        run: dotnet src/DWSIM.MCP.Server/bin/Release/net10.0/dwsim-mcp.dll --list-tools | tee tools.txt | wc -l
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            tests/**/TestResults/*.trx
+            tools.txt

@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    The projects under src/ and tests/ build with the settings of the DWSIM 10 tree they link
+    (net10.0, Option Strict Off for VB, the engine's warning list), imported from the submodule.
+    The engine projects themselves never see this file: MSBuild imports the nearest
+    Directory.Build.props above a project, and theirs is external/dwsim10/Directory.Build.props.
+  -->
+
+  <Import Project="external/dwsim10/Directory.Build.props" />
+
+  <!-- Our identity. The version names the engine inside (10.2.12) and our own revision after it. -->
+  <PropertyGroup>
+    <Version>10.2.12-fp.1</Version>
+    <AssemblyVersion>10.2.12.0</AssemblyVersion>
+    <FileVersion>10.2.12.0</FileVersion>
+    <Authors>friendlypeps and contributors</Authors>
+    <Company>friendlypeps</Company>
+    <Product>DWSIM-MCP</Product>
+    <Copyright>Copyright 2026 friendlypeps and contributors; DWSIM copyright 2008-2026 Daniel Wagner Oliveira de Medeiros and contributors</Copyright>
+    <PackageProjectUrl>https://github.com/friendlypeps/dwsim-mcp</PackageProjectUrl>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/friendlypeps/dwsim-mcp</RepositoryUrl>
+    <DwsimUpstreamTag>v10.2.12</DwsimUpstreamTag>
+  </PropertyGroup>
+
+</Project>

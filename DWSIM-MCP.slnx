@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DWSIM.MCP.Server/DWSIM.MCP.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DWSIM.MCP.Server.Tests/DWSIM.MCP.Server.Tests.csproj" />
+  </Folder>
+</Solution>

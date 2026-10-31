@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A Model Context Protocol server for DWSIM 10 that extends the official one. The upstream tool
+    sources under external/dwsim10/tools/DWSIM.MCPServer are compiled into this assembly as they
+    are; four files are replaced by same-name copies under Shadow/ (the entry point, the JSON-RPC
+    dispatcher with the handshake text, the headless flowsheet, and the unit-op tools at a newer upstream commit). Everything new lives under
+    Tools/. See README.md for the tool catalogue and docs/ for the design.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>DWSIM.MCPServer</RootNamespace>
+    <AssemblyName>dwsim-mcp</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <DwsimRoot>$(MSBuildThisFileDirectory)../../external/dwsim10/</DwsimRoot>
+    <UpstreamMcp>$(DwsimRoot)tools/DWSIM.MCPServer/</UpstreamMcp>
+  </PropertyGroup>
+
+  <!-- Upstream tool sources, minus the three files Shadow/ replaces. -->
+  <ItemGroup>
+    <Compile Include="$(UpstreamMcp)**/*.cs"
+             Exclude="$(UpstreamMcp)obj/**;$(UpstreamMcp)bin/**;$(UpstreamMcp)Program.cs;$(UpstreamMcp)Rpc/JsonRpcDispatcher.cs;$(UpstreamMcp)McpFlowsheet.cs;$(UpstreamMcp)Tools/UnitOps/UnitOpTools.cs"
+             Link="upstream/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- A submodule bump that moves or removes a shadowed file must be noticed, not silently compiled around. -->
+  <Target Name="VerifyUpstreamShadows" BeforeTargets="CoreCompile">
+    <Error Condition="!Exists('$(UpstreamMcp)Program.cs')" Text="Upstream Program.cs not found at $(UpstreamMcp); run 'git submodule update --init' or re-sync Shadow/." />
+    <Error Condition="!Exists('$(UpstreamMcp)Rpc/JsonRpcDispatcher.cs')" Text="Upstream Rpc/JsonRpcDispatcher.cs not found; re-sync Shadow/Rpc/JsonRpcDispatcher.cs." />
+    <Error Condition="!Exists('$(UpstreamMcp)McpFlowsheet.cs')" Text="Upstream McpFlowsheet.cs not found; re-sync Shadow/McpFlowsheet.cs." />
+    <Error Condition="!Exists('$(UpstreamMcp)Tools/UnitOps/UnitOpTools.cs')" Text="Upstream Tools/UnitOps/UnitOpTools.cs not found; re-sync Shadow/Tools/UnitOps/UnitOpTools.cs." />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" />
+  </ItemGroup>
+
+  <!-- The property package classes implement CAPE-OPEN interfaces; naming them needs this assembly, as upstream's tests do. -->
+  <ItemGroup>
+    <Reference Include="CapeOpen">
+      <HintPath>$(DwsimRoot)lib/CapeOpen.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- The same engine projects the upstream server references, and nothing else. -->
+  <ItemGroup>
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.Automation/DWSIM.Automation.csproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.Automation.DynamicRunner/DWSIM.Automation.DynamicRunner.csproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.FluentAPI/DWSIM.FluentAPI.csproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.FlowsheetBase/DWSIM.FlowsheetBase.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.Interfaces/DWSIM.Interfaces.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.Thermodynamics/DWSIM.Thermodynamics.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.UnitOperations/DWSIM.UnitOperations.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.GlobalSettings/DWSIM.GlobalSettings.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.SharedClasses/DWSIM.SharedClasses.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.FlowsheetSolver/DWSIM.FlowsheetSolver.vbproj" />
+    <ProjectReference Include="$(DwsimRoot)engine/DWSIM.Drawing.SkiaSharp/DWSIM.Drawing.SkiaSharp.vbproj" />
+  </ItemGroup>
+
+</Project>

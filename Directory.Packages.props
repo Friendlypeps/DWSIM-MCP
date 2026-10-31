@@ -1,0 +1,8 @@
+<Project>
+  <!--
+    Central package versions come from the pinned DWSIM 10 tree, so this server and the engine it
+    links agree on every package (Newtonsoft.Json, SkiaSharp, the test SDK). Add a version below
+    only for a package the engine does not already pin.
+  -->
+  <Import Project="external/dwsim10/Directory.Packages.props" />
+</Project>

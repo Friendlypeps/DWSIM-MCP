@@ -1,0 +1,11 @@
+bin/
+obj/
+build/
+publish-mcp/
+docker-build/
+artifacts/
+*.user
+*.swp
+.vs/
+.idea/
+TestResults/
