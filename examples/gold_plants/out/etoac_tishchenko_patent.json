@@ -1,0 +1,273 @@
+{
+ "plant": "etoac_tishchenko/patent CN1245794A",
+ "flowsheet_id": "7c45557e334d",
+ "assumptions": [
+  "conversion 98 % (builder placeholder; the patent gives yields per example, not a conversion)",
+  "acetaldehyde feed 1.0 mol/s at 5 C and 1.5 bar; catalyst solution 1/8 of the feed by volume is drawn as 0.1 mol/s ethyl acetate carrier (the alkoxide has no compound)",
+  "reactor isothermal at 5 C (stated -30 to 20 C, preferably -10 to 15 C, example 0-10 C); the 100 min residence time only sizes the kettles and does not enter a conversion reactor",
+  "catalyst decomposition D1: 0.03 mol/s water (patent: 0.08-8 ml per 100 ml; the alkoxide hydrolysis is not modelled)",
+  "evaporation E1: 97 % of the solution vaporised at 1.1 bar (nothing stated); the 3 % liquid stands for the catalyst residue",
+  "the evaporated gas phase is condensed to its bubble point before the rectifying tower (not in the patent; the rigorous column did not converge with the vapour feed)",
+  "rectifying tower C1: 15 stages, total condenser, feed stage 7, 1 atm, reflux ratio 2; distillate = 1.05 x the acetaldehyde fed (unreacted acetaldehyde overhead), ethyl acetate bottoms"
+ ],
+ "stages": {
+  "1_reaction_evaporation": {
+   "ok": true,
+   "errors": []
+  },
+  "2_rectifying_tower": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ "checks": {
+  "R1_duty_kW": null,
+  "E1_T_C": 77.61,
+  "C1_top_T_C": 48.6,
+  "C1_bottom_T_C": 73.8,
+  "C1_duties_kW": {
+   "condenser": 2.1334624771936426,
+   "reboiler": -2.2133503260007394
+  },
+  "bottoms_ester_wt_frac": 0.9789
+ },
+ "bips_missing_before_estimate": [
+  "Acetaldehyde / Ethyl acetate",
+  "Acetaldehyde / Ethanol",
+  "Acetaldehyde / Water"
+ ],
+ "streams": {
+  "ACETALDEHYDE": {
+   "stream": "ACETALDEHYDE",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 1.0,
+   "kg_s": 0.04405,
+   "x": {
+    "Acetaldehyde": 1.0
+   },
+   "w": {
+    "Acetaldehyde": 1.0
+   },
+   "phases": []
+  },
+  "CATALYST": {
+   "stream": "CATALYST",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 0.1,
+   "kg_s": 0.00881,
+   "x": {
+    "Ethyl acetate": 1.0
+   },
+   "w": {
+    "Ethyl acetate": 1.0
+   },
+   "phases": []
+  },
+  "R1-FEED": {
+   "stream": "R1-FEED",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 1.1,
+   "kg_s": 0.05286,
+   "x": {
+    "Acetaldehyde": 0.9091,
+    "Ethyl acetate": 0.0909
+   },
+   "w": {
+    "Acetaldehyde": 0.8333,
+    "Ethyl acetate": 0.1667
+   },
+   "phases": []
+  },
+  "R1-VAP": {
+   "stream": "R1-VAP",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Acetaldehyde": 0.0328,
+    "Ethyl acetate": 0.9672
+   },
+   "w": {
+    "Acetaldehyde": 0.0167,
+    "Ethyl acetate": 0.9833
+   },
+   "phases": []
+  },
+  "R1-LIQ": {
+   "stream": "R1-LIQ",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 0.61,
+   "kg_s": 0.05286,
+   "x": {
+    "Acetaldehyde": 0.0328,
+    "Ethyl acetate": 0.9672
+   },
+   "w": {
+    "Acetaldehyde": 0.0167,
+    "Ethyl acetate": 0.9833
+   },
+   "phases": []
+  },
+  "REACTION-MIXTURE": {
+   "stream": "REACTION-MIXTURE",
+   "T_C": 5.0,
+   "P_bar": 1.5,
+   "mol_s": 0.61,
+   "kg_s": 0.05286,
+   "x": {
+    "Acetaldehyde": 0.0328,
+    "Ethyl acetate": 0.9672
+   },
+   "w": {
+    "Acetaldehyde": 0.0167,
+    "Ethyl acetate": 0.9833
+   },
+   "phases": []
+  },
+  "WATER-D1": {
+   "stream": "WATER-D1",
+   "T_C": 20.0,
+   "P_bar": 1.5,
+   "mol_s": 0.03,
+   "kg_s": 0.00054,
+   "x": {
+    "Water": 1.0
+   },
+   "w": {
+    "Water": 1.0
+   },
+   "phases": []
+  },
+  "SOLUTION+SOLIDS": {
+   "stream": "SOLUTION+SOLIDS",
+   "T_C": 5.33,
+   "P_bar": 1.5,
+   "mol_s": 0.64,
+   "kg_s": 0.0534,
+   "x": {
+    "Acetaldehyde": 0.0312,
+    "Ethyl acetate": 0.9219,
+    "Water": 0.0469
+   },
+   "w": {
+    "Acetaldehyde": 0.0165,
+    "Ethyl acetate": 0.9734,
+    "Water": 0.0101
+   },
+   "phases": []
+  },
+  "E1-HOT": {
+   "stream": "E1-HOT",
+   "T_C": 77.61,
+   "P_bar": 1.1,
+   "mol_s": 0.64,
+   "kg_s": 0.0534,
+   "x": {
+    "Acetaldehyde": 0.0312,
+    "Ethyl acetate": 0.9219,
+    "Water": 0.0469
+   },
+   "w": {
+    "Acetaldehyde": 0.0165,
+    "Ethyl acetate": 0.9734,
+    "Water": 0.0101
+   },
+   "phases": []
+  },
+  "VAPOUR-TO-C1": {
+   "stream": "VAPOUR-TO-C1",
+   "T_C": 77.61,
+   "P_bar": 1.1,
+   "mol_s": 0.6208,
+   "kg_s": 0.05173,
+   "x": {
+    "Acetaldehyde": 0.032,
+    "Ethyl acetate": 0.92,
+    "Water": 0.048
+   },
+   "w": {
+    "Acetaldehyde": 0.0169,
+    "Ethyl acetate": 0.9727,
+    "Water": 0.0104
+   },
+   "phases": []
+  },
+  "CATALYST-RESIDUE": {
+   "stream": "CATALYST-RESIDUE",
+   "T_C": 77.61,
+   "P_bar": 1.1,
+   "mol_s": 0.0192,
+   "kg_s": 0.00167,
+   "x": {
+    "Acetaldehyde": 0.0067,
+    "Ethyl acetate": 0.984,
+    "Water": 0.0093
+   },
+   "w": {
+    "Acetaldehyde": 0.0034,
+    "Ethyl acetate": 0.9947,
+    "Water": 0.0019
+   },
+   "phases": []
+  },
+  "C1-FEED": {
+   "stream": "C1-FEED",
+   "T_C": 72.36,
+   "P_bar": 1.1,
+   "mol_s": 0.6208,
+   "kg_s": 0.05173,
+   "x": {
+    "Acetaldehyde": 0.032,
+    "Ethyl acetate": 0.92,
+    "Water": 0.048
+   },
+   "w": {
+    "Acetaldehyde": 0.0169,
+    "Ethyl acetate": 0.9727,
+    "Water": 0.0104
+   },
+   "phases": []
+  },
+  "C1-DIST": {
+   "stream": "C1-DIST",
+   "T_C": 48.65,
+   "P_bar": 1.013,
+   "mol_s": 0.02086,
+   "kg_s": 0.00128,
+   "x": {
+    "Acetaldehyde": 0.3011,
+    "Ethyl acetate": 0.5045,
+    "Water": 0.1945
+   },
+   "w": {
+    "Acetaldehyde": 0.2167,
+    "Ethyl acetate": 0.7261,
+    "Water": 0.0572
+   },
+   "phases": []
+  },
+  "C1-BTM-ESTER": {
+   "stream": "C1-BTM-ESTER",
+   "T_C": 73.77,
+   "P_bar": 1.113,
+   "mol_s": 0.59994,
+   "kg_s": 0.05045,
+   "x": {
+    "Acetaldehyde": 0.0227,
+    "Ethyl acetate": 0.9344,
+    "Water": 0.0429
+   },
+   "w": {
+    "Acetaldehyde": 0.0119,
+    "Ethyl acetate": 0.9789,
+    "Water": 0.0092
+   },
+   "phases": []
+  }
+ }
+}

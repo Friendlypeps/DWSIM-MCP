@@ -1,0 +1,724 @@
+{
+ "plant": "etoac_dehydrogenation/llm_opus",
+ "flowsheet_id": "3c96ab73b0d9",
+ "assumptions": [
+  "ethanol feed 1.0 mol/s anhydrous at 25 C; the plant runs at about 1.5 bar in the reactor section (no pressure stated)",
+  "E1 feed/effluent exchanger: feed heated to 80 C (liquid, just below its boiling point at 1.5 bar); the effluent side removes the same duty (tied by a Spec block)",
+  "vaporiser outlet = reactor temperature 230 C (document: superheated vapour; reactor 200-260 C)",
+  "reactor isothermal at 230 C (fixed bed with the stated 200-260 C window; the document calls it endothermic and equilibrium limited, so the duty is reported); a 0.5 % ethanol side conversion to diethyl ether gives the light end the first column removes",
+  "water-cooled condenser outlet 35 C",
+  "5 % of the hydrogen goes to the hydrogenation step, 95 % is exported (document: 'partly compressed')",
+  "hydrogenation at 5 bar (no pressure stated)",
+  "D1 first column: 12 stages, total condenser (the dissolved hydrogen is purged ahead of it), feed stage 6, 1.5 bar top, reflux ratio 3; liquid distillate = ether + acetaldehyde left + 2 % of the ester",
+  "pressure-swing pair D2/D3: 99 % of the ethanol and water to the recycle, 1 % of the ester with it; specified, not simulated (the document gives no pressures and does not say which column takes the feed)",
+  "D4 product column: 10 stages, total condenser, 1 atm, reflux ratio 2, bottoms purge 1 % of the feed (no heavy compound exists in the basis, so the purge is ester)"
+ ],
+ "stages": {
+  "1_reactor_open": {
+   "ok": true,
+   "errors": []
+  },
+  "1b_effluent_side_tied": {
+   "ok": true,
+   "errors": []
+  },
+  "1c_separation_and_hydrogenation": {
+   "ok": true,
+   "errors": []
+  },
+  "2_first_column": {
+   "ok": true,
+   "errors": []
+  },
+  "3a_product_column_recycle_open": {
+   "ok": true,
+   "errors": []
+  },
+  "3_full_plant": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ "checks": {
+  "R1_ethanol_conversion_pct": "77.67201794566971",
+  "product_ester_wt_frac (doc >= 0.995)": 0.9968,
+  "product_mol_s_per_mol_fresh_ethanol": 0.29262,
+  "R1_ethanol_conversion_per_pass_pct": "77.69916033926711"
+ },
+ "bips_missing_before_estimate": [
+  "Ethanol / Hydrogen",
+  "Ethanol / Acetaldehyde",
+  "Ethyl acetate / Hydrogen",
+  "Ethyl acetate / Acetaldehyde",
+  "Ethyl acetate / Diethyl ether",
+  "Hydrogen / Acetaldehyde",
+  "Hydrogen / Diethyl ether",
+  "Hydrogen / Water",
+  "Acetaldehyde / Diethyl ether",
+  "Acetaldehyde / Water"
+ ],
+ "streams": {
+  "ETHANOL-T1": {
+   "stream": "ETHANOL-T1",
+   "T_C": 25.0,
+   "P_bar": 1.5,
+   "mol_s": 1.0,
+   "kg_s": 0.04607,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "E1-COLD-IN": {
+   "stream": "E1-COLD-IN",
+   "T_C": 35.44,
+   "P_bar": 1.5,
+   "mol_s": 1.1863,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.9962,
+    "Ethyl acetate": 0.0024,
+    "Water": 0.0014
+   },
+   "w": {
+    "Ethanol": 0.9948,
+    "Ethyl acetate": 0.0046,
+    "Water": 0.0006
+   },
+   "phases": []
+  },
+  "E1-COLD-OUT": {
+   "stream": "E1-COLD-OUT",
+   "T_C": 80.0,
+   "P_bar": 1.5,
+   "mol_s": 1.1863,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.9962,
+    "Ethyl acetate": 0.0024,
+    "Water": 0.0014
+   },
+   "w": {
+    "Ethanol": 0.9948,
+    "Ethyl acetate": 0.0046,
+    "Water": 0.0006
+   },
+   "phases": []
+  },
+  "ETHANOL-VAPOUR": {
+   "stream": "ETHANOL-VAPOUR",
+   "T_C": 230.0,
+   "P_bar": 1.5,
+   "mol_s": 1.1863,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.9962,
+    "Ethyl acetate": 0.0024,
+    "Water": 0.0014
+   },
+   "w": {
+    "Ethanol": 0.9948,
+    "Ethyl acetate": 0.0046,
+    "Water": 0.0006
+   },
+   "phases": []
+  },
+  "R1A-OUT": {
+   "stream": "R1A-OUT",
+   "T_C": 230.0,
+   "P_bar": 1.5,
+   "mol_s": 1.1863,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.9912,
+    "Ethyl acetate": 0.0024,
+    "Diethyl ether": 0.0025,
+    "Water": 0.0039
+   },
+   "w": {
+    "Ethanol": 0.9898,
+    "Ethyl acetate": 0.0046,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "R1A-LIQ": {
+   "stream": "R1A-LIQ",
+   "T_C": 230.0,
+   "P_bar": 1.5,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.9912,
+    "Ethyl acetate": 0.0024,
+    "Diethyl ether": 0.0025,
+    "Water": 0.0039
+   },
+   "w": {
+    "Ethanol": 0.9898,
+    "Ethyl acetate": 0.0046,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "R1-OUT": {
+   "stream": "R1-OUT",
+   "T_C": 230.0,
+   "P_bar": 1.5,
+   "mol_s": 1.65703,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.1582,
+    "Ethyl acetate": 0.269,
+    "Hydrogen": 0.5514,
+    "Acetaldehyde": 0.0168,
+    "Diethyl ether": 0.0018,
+    "Water": 0.0028
+   },
+   "w": {
+    "Ethanol": 0.2207,
+    "Ethyl acetate": 0.7177,
+    "Hydrogen": 0.0337,
+    "Acetaldehyde": 0.0224,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "R1-LIQ": {
+   "stream": "R1-LIQ",
+   "T_C": 230.0,
+   "P_bar": 1.5,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.1582,
+    "Ethyl acetate": 0.269,
+    "Hydrogen": 0.5514,
+    "Acetaldehyde": 0.0168,
+    "Diethyl ether": 0.0018,
+    "Water": 0.0028
+   },
+   "w": {
+    "Ethanol": 0.2207,
+    "Ethyl acetate": 0.7177,
+    "Hydrogen": 0.0337,
+    "Acetaldehyde": 0.0224,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "E1-HOT-OUT": {
+   "stream": "E1-HOT-OUT",
+   "T_C": 175.18,
+   "P_bar": 1.5,
+   "mol_s": 1.65703,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.1582,
+    "Ethyl acetate": 0.269,
+    "Hydrogen": 0.5514,
+    "Acetaldehyde": 0.0168,
+    "Diethyl ether": 0.0018,
+    "Water": 0.0028
+   },
+   "w": {
+    "Ethanol": 0.2207,
+    "Ethyl acetate": 0.7177,
+    "Hydrogen": 0.0337,
+    "Acetaldehyde": 0.0224,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "CONDENSED": {
+   "stream": "CONDENSED",
+   "T_C": 35.0,
+   "P_bar": 1.5,
+   "mol_s": 1.65703,
+   "kg_s": 0.05472,
+   "x": {
+    "Ethanol": 0.1582,
+    "Ethyl acetate": 0.269,
+    "Hydrogen": 0.5514,
+    "Acetaldehyde": 0.0168,
+    "Diethyl ether": 0.0018,
+    "Water": 0.0028
+   },
+   "w": {
+    "Ethanol": 0.2207,
+    "Ethyl acetate": 0.7177,
+    "Hydrogen": 0.0337,
+    "Acetaldehyde": 0.0224,
+    "Diethyl ether": 0.004,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "H2-GAS": {
+   "stream": "H2-GAS",
+   "T_C": 35.0,
+   "P_bar": 1.5,
+   "mol_s": 1.08997,
+   "kg_s": 0.01423,
+   "x": {
+    "Ethanol": 0.0488,
+    "Ethyl acetate": 0.0934,
+    "Hydrogen": 0.8382,
+    "Acetaldehyde": 0.0166,
+    "Diethyl ether": 0.0017,
+    "Water": 0.0012
+   },
+   "w": {
+    "Ethanol": 0.1723,
+    "Ethyl acetate": 0.6306,
+    "Hydrogen": 0.1294,
+    "Acetaldehyde": 0.0562,
+    "Diethyl ether": 0.0099,
+    "Water": 0.0016
+   },
+   "phases": []
+  },
+  "CRUDE-LIQUID": {
+   "stream": "CRUDE-LIQUID",
+   "T_C": 35.0,
+   "P_bar": 1.5,
+   "mol_s": 0.56706,
+   "kg_s": 0.0405,
+   "x": {
+    "Ethanol": 0.3686,
+    "Ethyl acetate": 0.6065,
+    "Hydrogen": 0.0,
+    "Acetaldehyde": 0.0171,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0059
+   },
+   "w": {
+    "Ethanol": 0.2378,
+    "Ethyl acetate": 0.7483,
+    "Acetaldehyde": 0.0105,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "H2-TO-K1": {
+   "stream": "H2-TO-K1",
+   "T_C": 35.0,
+   "P_bar": 1.5,
+   "mol_s": 0.0545,
+   "kg_s": 0.00071,
+   "x": {
+    "Ethanol": 0.0488,
+    "Ethyl acetate": 0.0934,
+    "Hydrogen": 0.8382,
+    "Acetaldehyde": 0.0166,
+    "Diethyl ether": 0.0017,
+    "Water": 0.0012
+   },
+   "w": {
+    "Ethanol": 0.1723,
+    "Ethyl acetate": 0.6306,
+    "Hydrogen": 0.1294,
+    "Acetaldehyde": 0.0562,
+    "Diethyl ether": 0.0099,
+    "Water": 0.0016
+   },
+   "phases": []
+  },
+  "H2-COPRODUCT": {
+   "stream": "H2-COPRODUCT",
+   "T_C": 35.0,
+   "P_bar": 1.5,
+   "mol_s": 1.03547,
+   "kg_s": 0.01352,
+   "x": {
+    "Ethanol": 0.0488,
+    "Ethyl acetate": 0.0934,
+    "Hydrogen": 0.8382,
+    "Acetaldehyde": 0.0166,
+    "Diethyl ether": 0.0017,
+    "Water": 0.0012
+   },
+   "w": {
+    "Ethanol": 0.1723,
+    "Ethyl acetate": 0.6306,
+    "Hydrogen": 0.1294,
+    "Acetaldehyde": 0.0562,
+    "Diethyl ether": 0.0099,
+    "Water": 0.0016
+   },
+   "phases": []
+  },
+  "H2-HP": {
+   "stream": "H2-HP",
+   "T_C": 163.42,
+   "P_bar": 5.0,
+   "mol_s": 0.0545,
+   "kg_s": 0.00071,
+   "x": {
+    "Ethanol": 0.0488,
+    "Ethyl acetate": 0.0934,
+    "Hydrogen": 0.8382,
+    "Acetaldehyde": 0.0166,
+    "Diethyl ether": 0.0017,
+    "Water": 0.0012
+   },
+   "w": {
+    "Ethanol": 0.1723,
+    "Ethyl acetate": 0.6306,
+    "Hydrogen": 0.1294,
+    "Acetaldehyde": 0.0562,
+    "Diethyl ether": 0.0099,
+    "Water": 0.0016
+   },
+   "phases": []
+  },
+  "CRUDE-HP": {
+   "stream": "CRUDE-HP",
+   "T_C": 35.06,
+   "P_bar": 5.0,
+   "mol_s": 0.56706,
+   "kg_s": 0.0405,
+   "x": {
+    "Ethanol": 0.3686,
+    "Ethyl acetate": 0.6065,
+    "Hydrogen": 0.0,
+    "Acetaldehyde": 0.0171,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0059
+   },
+   "w": {
+    "Ethanol": 0.2378,
+    "Ethyl acetate": 0.7483,
+    "Acetaldehyde": 0.0105,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "R2-FEED": {
+   "stream": "R2-FEED",
+   "T_C": 40.62,
+   "P_bar": 5.0,
+   "mol_s": 0.62156,
+   "kg_s": 0.04121,
+   "x": {
+    "Ethanol": 0.3405,
+    "Ethyl acetate": 0.5615,
+    "Hydrogen": 0.0735,
+    "Acetaldehyde": 0.0171,
+    "Diethyl ether": 0.0018,
+    "Water": 0.0055
+   },
+   "w": {
+    "Ethanol": 0.2366,
+    "Ethyl acetate": 0.7462,
+    "Hydrogen": 0.0022,
+    "Acetaldehyde": 0.0113,
+    "Diethyl ether": 0.0021,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "R2-VAP": {
+   "stream": "R2-VAP",
+   "T_C": 48.76,
+   "P_bar": 5.0,
+   "mol_s": 0.03822,
+   "kg_s": 0.0003,
+   "x": {
+    "Ethanol": 0.0303,
+    "Ethyl acetate": 0.0511,
+    "Hydrogen": 0.9171,
+    "Diethyl ether": 0.0009,
+    "Water": 0.0007
+   },
+   "w": {
+    "Ethanol": 0.1783,
+    "Ethyl acetate": 0.5755,
+    "Hydrogen": 0.2363,
+    "Diethyl ether": 0.0083,
+    "Water": 0.0016
+   },
+   "phases": []
+  },
+  "R2-LIQ": {
+   "stream": "R2-LIQ",
+   "T_C": 48.76,
+   "P_bar": 5.0,
+   "mol_s": 0.57273,
+   "kg_s": 0.04091,
+   "x": {
+    "Ethanol": 0.3861,
+    "Ethyl acetate": 0.606,
+    "Hydrogen": 0.0001,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0059
+   },
+   "w": {
+    "Ethanol": 0.249,
+    "Ethyl acetate": 0.7475,
+    "Hydrogen": 0.0,
+    "Diethyl ether": 0.002,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "HYDROGENATED-CRUDE": {
+   "stream": "HYDROGENATED-CRUDE",
+   "T_C": 48.76,
+   "P_bar": 5.0,
+   "mol_s": 0.61095,
+   "kg_s": 0.04121,
+   "x": {
+    "Ethanol": 0.3638,
+    "Ethyl acetate": 0.5713,
+    "Hydrogen": 0.0574,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0056
+   },
+   "w": {
+    "Ethanol": 0.2485,
+    "Ethyl acetate": 0.7462,
+    "Hydrogen": 0.0017,
+    "Diethyl ether": 0.0021,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "D1-FEED-WET": {
+   "stream": "D1-FEED-WET",
+   "T_C": 46.03,
+   "P_bar": 1.6,
+   "mol_s": 0.61095,
+   "kg_s": 0.04121,
+   "x": {
+    "Ethanol": 0.3638,
+    "Ethyl acetate": 0.5713,
+    "Hydrogen": 0.0574,
+    "Diethyl ether": 0.0019,
+    "Water": 0.0056
+   },
+   "w": {
+    "Ethanol": 0.2485,
+    "Ethyl acetate": 0.7462,
+    "Hydrogen": 0.0017,
+    "Diethyl ether": 0.0021,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "D1-GAS": {
+   "stream": "D1-GAS",
+   "T_C": 46.03,
+   "P_bar": 1.6,
+   "mol_s": 0.03509,
+   "kg_s": 7e-05,
+   "x": {
+    "Hydrogen": 1.0
+   },
+   "w": {
+    "Hydrogen": 1.0
+   },
+   "phases": []
+  },
+  "D1-FEED": {
+   "stream": "D1-FEED",
+   "T_C": 46.03,
+   "P_bar": 1.6,
+   "mol_s": 0.57587,
+   "kg_s": 0.04114,
+   "x": {
+    "Ethanol": 0.386,
+    "Ethyl acetate": 0.6061,
+    "Diethyl ether": 0.002,
+    "Water": 0.006
+   },
+   "w": {
+    "Ethanol": 0.2489,
+    "Ethyl acetate": 0.7475,
+    "Diethyl ether": 0.0021,
+    "Water": 0.0015
+   },
+   "phases": []
+  },
+  "D1-LIGHTS": {
+   "stream": "D1-LIGHTS",
+   "T_C": 81.82,
+   "P_bar": 1.5,
+   "mol_s": 0.10213,
+   "kg_s": 0.00688,
+   "x": {
+    "Ethanol": 0.4552,
+    "Ethyl acetate": 0.5124,
+    "Diethyl ether": 0.0112,
+    "Water": 0.0212
+   },
+   "w": {
+    "Ethanol": 0.3115,
+    "Ethyl acetate": 0.6705,
+    "Diethyl ether": 0.0123,
+    "Water": 0.0057
+   },
+   "phases": []
+  },
+  "D1-BTM": {
+   "stream": "D1-BTM",
+   "T_C": 85.2,
+   "P_bar": 1.6,
+   "mol_s": 0.47374,
+   "kg_s": 0.03426,
+   "x": {
+    "Ethanol": 0.3711,
+    "Ethyl acetate": 0.6263,
+    "Diethyl ether": 0.0,
+    "Water": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.2364,
+    "Ethyl acetate": 0.763,
+    "Diethyl ether": 0.0,
+    "Water": 0.0007
+   },
+   "phases": []
+  },
+  "ETHANOL-RECYCLE": {
+   "stream": "ETHANOL-RECYCLE",
+   "T_C": 85.2,
+   "P_bar": 1.6,
+   "mol_s": 0.17824,
+   "kg_s": 0.0083,
+   "x": {
+    "Ethanol": 0.9763,
+    "Ethyl acetate": 0.0166,
+    "Water": 0.007
+   },
+   "w": {
+    "Ethanol": 0.9658,
+    "Ethyl acetate": 0.0315,
+    "Water": 0.0027
+   },
+   "phases": []
+  },
+  "ESTER-TO-D4": {
+   "stream": "ESTER-TO-D4",
+   "T_C": 85.2,
+   "P_bar": 1.6,
+   "mol_s": 0.2955,
+   "kg_s": 0.02596,
+   "x": {
+    "Ethanol": 0.0059,
+    "Ethyl acetate": 0.994,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "w": {
+    "Ethanol": 0.0031,
+    "Ethyl acetate": 0.9969,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "phases": []
+  },
+  "D4-DIST": {
+   "stream": "D4-DIST",
+   "T_C": 76.96,
+   "P_bar": 1.013,
+   "mol_s": 0.29262,
+   "kg_s": 0.02571,
+   "x": {
+    "Ethanol": 0.006,
+    "Ethyl acetate": 0.9939,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "w": {
+    "Ethanol": 0.0032,
+    "Ethyl acetate": 0.9968,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "phases": []
+  },
+  "HEAVIES-PURGE": {
+   "stream": "HEAVIES-PURGE",
+   "T_C": 78.66,
+   "P_bar": 1.063,
+   "mol_s": 0.00287,
+   "kg_s": 0.00025,
+   "x": {
+    "Ethanol": 0.0,
+    "Ethyl acetate": 1.0
+   },
+   "w": {
+    "Ethanol": 0.0,
+    "Ethyl acetate": 1.0
+   },
+   "phases": []
+  },
+  "PRODUCT-T2": {
+   "stream": "PRODUCT-T2",
+   "T_C": 25.0,
+   "P_bar": 1.013,
+   "mol_s": 0.29262,
+   "kg_s": 0.02571,
+   "x": {
+    "Ethanol": 0.006,
+    "Ethyl acetate": 0.9939,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "w": {
+    "Ethanol": 0.0032,
+    "Ethyl acetate": 0.9968,
+    "Diethyl ether": 0.0,
+    "Water": 0.0
+   },
+   "phases": []
+  },
+  "ETHANOL-RCY-P": {
+   "stream": "ETHANOL-RCY-P",
+   "T_C": 85.2,
+   "P_bar": 1.5,
+   "mol_s": 0.17824,
+   "kg_s": 0.0083,
+   "x": {
+    "Ethanol": 0.9763,
+    "Ethyl acetate": 0.0166,
+    "Water": 0.007
+   },
+   "w": {
+    "Ethanol": 0.9658,
+    "Ethyl acetate": 0.0315,
+    "Water": 0.0027
+   },
+   "phases": []
+  },
+  "ETHANOL-RCY-R": {
+   "stream": "ETHANOL-RCY-R",
+   "T_C": 85.2,
+   "P_bar": 1.5,
+   "mol_s": 0.17824,
+   "kg_s": 0.0083,
+   "x": {
+    "Ethanol": 0.9763,
+    "Ethyl acetate": 0.0166,
+    "Water": 0.007
+   },
+   "w": {
+    "Ethanol": 0.9658,
+    "Ethyl acetate": 0.0315,
+    "Water": 0.0027
+   },
+   "phases": []
+  }
+ }
+}

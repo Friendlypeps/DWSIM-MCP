@@ -9,3 +9,8 @@ artifacts/
 .vs/
 .idea/
 TestResults/
+
+# gold-plant run logs and intermediate flowsheets
+examples/gold_plants/logs/
+examples/gold_plants/out/*_stage*.dwxmz
+__pycache__/

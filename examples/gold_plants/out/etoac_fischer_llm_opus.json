@@ -1,0 +1,616 @@
+{
+ "plant": "etoac_fischer/llm_opus",
+ "flowsheet_id": "488f0b40e5cc",
+ "assumptions": [
+  "NRTL ethyl acetate/water pair replaced by one regressed to the mutual solubilities at 25 C (A12 349.75, A21 2176.38 cal/mol, alpha 0.2): the databank pair gives no liquid split in the decanter",
+  "basis 1.0 mol/s glacial acetic acid; ethanol 'slight molar excess' taken as 1.1 mol/s",
+  "feed temperature 25 C and storage at 1 atm (U1 storage tanks are the feed streams)",
+  "metering pumps (U2) discharge at 1.5 bar (no pressure stated)",
+  "reactor at 85 C (stated: boiling temperature, 80-110 C) and about 1 atm (0.1 bar drop below the column bottom pressure the recycle brings in); both reactor outlets enter the column that sits on top of it",
+  "U5 esterification column: 12 stages (20 stages, which would keep more acid out of the overhead, did not converge inside the recycle loop headless), total condenser, feed on stage 9, 0.1 bar column pressure drop, bottoms (acid + catalyst reflux to the reactor) 1.0 mol/s",
+  "water added to the condensate: 0.5 mol/s at 25 C (amount not stated)",
+  "half of the decanter organic phase returns to U5 as reflux, half goes to the drying column (split not stated)",
+  "U8 drying column: 12 stages, total condenser, feed stage 6, reflux ratio 3, 0.05 bar pressure drop, bottoms specified at 1 wt% water (a drying column; the document's 99.5 wt% ester is then a result, the acid that slips over U5 ends up here); fallback bottoms draw 0.1745 mol/s from a water balance",
+  "product cooler to 25 C (document: cooled, sent to the product tank U10 = PRODUCT stream)",
+  "the U8 overhead condensate is cooled to 35 C (decanter temperature) before it re-enters the decanter",
+  "U11 alcohol recovery column: 10 stages, total condenser, feed stage 5, reflux ratio 2, bottoms draw 1.0392 mol/s = 95 % of the water in the aqueous phase (document: water 'close to the purity of wastewater' at 100 C is then a result)"
+ ],
+ "stages": {
+  "1_reactor_column": {
+   "ok": true,
+   "errors": []
+  },
+  "2pre_decanter": {
+   "ok": true,
+   "errors": []
+  },
+  "2a_open_azeo_recycle": {
+   "ok": true,
+   "errors": []
+  },
+  "2_loops_open": {
+   "ok": true,
+   "errors": [],
+   "note": "ORG-REFLUX (to U5 top) and DRY-TOP-COLD (to the decanter) left open"
+  },
+  "3a_open_ethanol_recycle": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ "bips_missing_before_estimate": [
+  "Acetic acid / Ethyl acetate",
+  "Acetic acid / Water"
+ ],
+ "bips_estimated": [
+  "Acetic acid / Ethyl acetate",
+  "Acetic acid / Water"
+ ],
+ "streams": {
+  "ACID": {
+   "stream": "ACID",
+   "T_C": 25.0,
+   "P_bar": 1.013,
+   "mol_s": 1.0,
+   "kg_s": 0.06005,
+   "x": {
+    "Acetic acid": 1.0
+   },
+   "w": {
+    "Acetic acid": 1.0
+   },
+   "phases": []
+  },
+  "ETOH": {
+   "stream": "ETOH",
+   "T_C": 25.0,
+   "P_bar": 1.013,
+   "mol_s": 1.1,
+   "kg_s": 0.05068,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "ACID-P": {
+   "stream": "ACID-P",
+   "T_C": 25.01,
+   "P_bar": 1.5,
+   "mol_s": 1.0,
+   "kg_s": 0.06005,
+   "x": {
+    "Acetic acid": 1.0
+   },
+   "w": {
+    "Acetic acid": 1.0
+   },
+   "phases": []
+  },
+  "ETOH-P": {
+   "stream": "ETOH-P",
+   "T_C": 25.01,
+   "P_bar": 1.5,
+   "mol_s": 1.1,
+   "kg_s": 0.05068,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "MIXED-FEED": {
+   "stream": "MIXED-FEED",
+   "T_C": 57.86,
+   "P_bar": 1.113,
+   "mol_s": 3.1,
+   "kg_s": 0.1696,
+   "x": {
+    "Ethanol": 0.3551,
+    "Acetic acid": 0.6356,
+    "Ethyl acetate": 0.0002,
+    "Water": 0.0091
+   },
+   "w": {
+    "Ethanol": 0.2991,
+    "Acetic acid": 0.6976,
+    "Ethyl acetate": 0.0003,
+    "Water": 0.003
+   },
+   "phases": []
+  },
+  "FEED-HOT": {
+   "stream": "FEED-HOT",
+   "T_C": 75.0,
+   "P_bar": 1.113,
+   "mol_s": 3.1,
+   "kg_s": 0.1696,
+   "x": {
+    "Ethanol": 0.3551,
+    "Acetic acid": 0.6356,
+    "Ethyl acetate": 0.0002,
+    "Water": 0.0091
+   },
+   "w": {
+    "Ethanol": 0.2991,
+    "Acetic acid": 0.6976,
+    "Ethyl acetate": 0.0003,
+    "Water": 0.003
+   },
+   "phases": []
+  },
+  "RX-VAP": {
+   "stream": "RX-VAP",
+   "T_C": 85.0,
+   "P_bar": 1.013,
+   "mol_s": 0.82025,
+   "kg_s": 0.04898,
+   "x": {
+    "Ethanol": 0.0798,
+    "Acetic acid": 0.1268,
+    "Ethyl acetate": 0.4868,
+    "Water": 0.3066
+   },
+   "w": {
+    "Ethanol": 0.0616,
+    "Acetic acid": 0.1276,
+    "Ethyl acetate": 0.7184,
+    "Water": 0.0925
+   },
+   "phases": []
+  },
+  "RX-LIQ": {
+   "stream": "RX-LIQ",
+   "T_C": 85.0,
+   "P_bar": 1.013,
+   "mol_s": 2.27975,
+   "kg_s": 0.12063,
+   "x": {
+    "Ethanol": 0.0579,
+    "Acetic acid": 0.4223,
+    "Ethyl acetate": 0.2215,
+    "Water": 0.2984
+   },
+   "w": {
+    "Ethanol": 0.0504,
+    "Acetic acid": 0.4793,
+    "Ethyl acetate": 0.3688,
+    "Water": 0.1016
+   },
+   "phases": []
+  },
+  "RX-OUT": {
+   "stream": "RX-OUT",
+   "T_C": 85.0,
+   "P_bar": 1.013,
+   "mol_s": 3.10001,
+   "kg_s": 0.1696,
+   "x": {
+    "Ethanol": 0.0637,
+    "Acetic acid": 0.3441,
+    "Ethyl acetate": 0.2917,
+    "Water": 0.3006
+   },
+   "w": {
+    "Ethanol": 0.0536,
+    "Acetic acid": 0.3777,
+    "Ethyl acetate": 0.4697,
+    "Water": 0.099
+   },
+   "phases": []
+  },
+  "EST-DIST": {
+   "stream": "EST-DIST",
+   "T_C": 70.75,
+   "P_bar": 1.013,
+   "mol_s": 2.10001,
+   "kg_s": 0.11073,
+   "x": {
+    "Ethanol": 0.0935,
+    "Acetic acid": 0.0459,
+    "Ethyl acetate": 0.4303,
+    "Water": 0.4303
+   },
+   "w": {
+    "Ethanol": 0.0817,
+    "Acetic acid": 0.0523,
+    "Ethyl acetate": 0.719,
+    "Water": 0.147
+   },
+   "phases": []
+  },
+  "EST-BTM": {
+   "stream": "EST-BTM",
+   "T_C": 118.93,
+   "P_bar": 1.113,
+   "mol_s": 1.0,
+   "kg_s": 0.05887,
+   "x": {
+    "Ethanol": 0.001,
+    "Acetic acid": 0.9703,
+    "Ethyl acetate": 0.0006,
+    "Water": 0.0281
+   },
+   "w": {
+    "Ethanol": 0.0007,
+    "Acetic acid": 0.9897,
+    "Ethyl acetate": 0.0009,
+    "Water": 0.0086
+   },
+   "phases": []
+  },
+  "EST-BTM-R": {
+   "stream": "EST-BTM-R",
+   "T_C": 118.93,
+   "P_bar": 1.113,
+   "mol_s": 1.0,
+   "kg_s": 0.05887,
+   "x": {
+    "Ethanol": 0.001,
+    "Acetic acid": 0.9703,
+    "Ethyl acetate": 0.0006,
+    "Water": 0.0281
+   },
+   "w": {
+    "Ethanol": 0.0007,
+    "Acetic acid": 0.9897,
+    "Ethyl acetate": 0.0009,
+    "Water": 0.0086
+   },
+   "phases": []
+  },
+  "CONDENSATE": {
+   "stream": "CONDENSATE",
+   "T_C": 35.0,
+   "P_bar": 1.013,
+   "mol_s": 2.10001,
+   "kg_s": 0.11073,
+   "x": {
+    "Ethanol": 0.0935,
+    "Acetic acid": 0.0459,
+    "Ethyl acetate": 0.4303,
+    "Water": 0.4303
+   },
+   "w": {
+    "Ethanol": 0.0817,
+    "Acetic acid": 0.0523,
+    "Ethyl acetate": 0.719,
+    "Water": 0.147
+   },
+   "phases": []
+  },
+  "WATER-ADD": {
+   "stream": "WATER-ADD",
+   "T_C": 25.0,
+   "P_bar": 1.013,
+   "mol_s": 0.5,
+   "kg_s": 0.00901,
+   "x": {
+    "Water": 1.0
+   },
+   "w": {
+    "Water": 1.0
+   },
+   "phases": []
+  },
+  "DEC-FEED": {
+   "stream": "DEC-FEED",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 2.60001,
+   "kg_s": 0.11974,
+   "x": {
+    "Ethanol": 0.0755,
+    "Acetic acid": 0.0371,
+    "Ethyl acetate": 0.3475,
+    "Water": 0.5398
+   },
+   "w": {
+    "Ethanol": 0.0756,
+    "Acetic acid": 0.0483,
+    "Ethyl acetate": 0.6649,
+    "Water": 0.2112
+   },
+   "phases": []
+  },
+  "DEC-VAP": {
+   "stream": "DEC-VAP",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.0755,
+    "Acetic acid": 0.0371,
+    "Ethyl acetate": 0.3475,
+    "Water": 0.5398
+   },
+   "w": {
+    "Ethanol": 0.0756,
+    "Acetic acid": 0.0483,
+    "Ethyl acetate": 0.6649,
+    "Water": 0.2112
+   },
+   "phases": []
+  },
+  "ORGANIC": {
+   "stream": "ORGANIC",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 1.38118,
+   "kg_s": 0.09209,
+   "x": {
+    "Ethanol": 0.1047,
+    "Acetic acid": 0.0468,
+    "Ethyl acetate": 0.6243,
+    "Water": 0.2242
+   },
+   "w": {
+    "Ethanol": 0.0724,
+    "Acetic acid": 0.0421,
+    "Ethyl acetate": 0.8249,
+    "Water": 0.0606
+   },
+   "phases": []
+  },
+  "AQUEOUS": {
+   "stream": "AQUEOUS",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 1.21883,
+   "kg_s": 0.02764,
+   "x": {
+    "Ethanol": 0.0425,
+    "Acetic acid": 0.0261,
+    "Ethyl acetate": 0.0339,
+    "Water": 0.8975
+   },
+   "w": {
+    "Ethanol": 0.0862,
+    "Acetic acid": 0.069,
+    "Ethyl acetate": 0.1318,
+    "Water": 0.7129
+   },
+   "phases": []
+  },
+  "ORG-TO-U5": {
+   "stream": "ORG-TO-U5",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 0.69059,
+   "kg_s": 0.04605,
+   "x": {
+    "Ethanol": 0.1047,
+    "Acetic acid": 0.0468,
+    "Ethyl acetate": 0.6243,
+    "Water": 0.2242
+   },
+   "w": {
+    "Ethanol": 0.0724,
+    "Acetic acid": 0.0421,
+    "Ethyl acetate": 0.8249,
+    "Water": 0.0606
+   },
+   "phases": []
+  },
+  "ORG-TO-U8": {
+   "stream": "ORG-TO-U8",
+   "T_C": 33.74,
+   "P_bar": 1.013,
+   "mol_s": 0.69059,
+   "kg_s": 0.04605,
+   "x": {
+    "Ethanol": 0.1047,
+    "Acetic acid": 0.0468,
+    "Ethyl acetate": 0.6243,
+    "Water": 0.2242
+   },
+   "w": {
+    "Ethanol": 0.0724,
+    "Acetic acid": 0.0421,
+    "Ethyl acetate": 0.8249,
+    "Water": 0.0606
+   },
+   "phases": []
+  },
+  "DRY-TOP": {
+   "stream": "DRY-TOP",
+   "T_C": 69.69,
+   "P_bar": 1.013,
+   "mol_s": 0.47768,
+   "kg_s": 0.02941,
+   "x": {
+    "Ethanol": 0.123,
+    "Ethyl acetate": 0.5723,
+    "Water": 0.3048
+   },
+   "w": {
+    "Ethanol": 0.092,
+    "Ethyl acetate": 0.8188,
+    "Water": 0.0892
+   },
+   "phases": []
+  },
+  "DRY-BTM": {
+   "stream": "DRY-BTM",
+   "T_C": 78.42,
+   "P_bar": 1.063,
+   "mol_s": 0.2129,
+   "kg_s": 0.01663,
+   "x": {
+    "Ethanol": 0.0638,
+    "Acetic acid": 0.1518,
+    "Ethyl acetate": 0.741,
+    "Water": 0.0434
+   },
+   "w": {
+    "Ethanol": 0.0376,
+    "Acetic acid": 0.1167,
+    "Ethyl acetate": 0.8357,
+    "Water": 0.01
+   },
+   "phases": []
+  },
+  "PRODUCT": {
+   "stream": "PRODUCT",
+   "T_C": 25.0,
+   "P_bar": 1.063,
+   "mol_s": 0.2129,
+   "kg_s": 0.01663,
+   "x": {
+    "Ethanol": 0.0638,
+    "Acetic acid": 0.1518,
+    "Ethyl acetate": 0.741,
+    "Water": 0.0434
+   },
+   "w": {
+    "Ethanol": 0.0376,
+    "Acetic acid": 0.1167,
+    "Ethyl acetate": 0.8357,
+    "Water": 0.01
+   },
+   "phases": []
+  },
+  "ORG-REFLUX": {
+   "stream": "ORG-REFLUX",
+   "T_C": 33.74,
+   "P_bar": 1.2,
+   "mol_s": 0.69059,
+   "kg_s": 0.04605,
+   "x": {
+    "Ethanol": 0.1047,
+    "Acetic acid": 0.0468,
+    "Ethyl acetate": 0.6243,
+    "Water": 0.2242
+   },
+   "w": {
+    "Ethanol": 0.0724,
+    "Acetic acid": 0.0421,
+    "Ethyl acetate": 0.8249,
+    "Water": 0.0606
+   },
+   "phases": []
+  },
+  "DRY-TOP-COLD": {
+   "stream": "DRY-TOP-COLD",
+   "T_C": 35.0,
+   "P_bar": 1.013,
+   "mol_s": 0.47768,
+   "kg_s": 0.02941,
+   "x": {
+    "Ethanol": 0.123,
+    "Ethyl acetate": 0.5723,
+    "Water": 0.3048
+   },
+   "w": {
+    "Ethanol": 0.092,
+    "Ethyl acetate": 0.8188,
+    "Water": 0.0892
+   },
+   "phases": []
+  },
+  "ALC-TOP": {
+   "stream": "ALC-TOP",
+   "T_C": 70.74,
+   "P_bar": 1.013,
+   "mol_s": 0.17963,
+   "kg_s": 0.00766,
+   "x": {
+    "Ethanol": 0.288,
+    "Acetic acid": 0.0092,
+    "Ethyl acetate": 0.2302,
+    "Water": 0.4726
+   },
+   "w": {
+    "Ethanol": 0.3113,
+    "Acetic acid": 0.0129,
+    "Ethyl acetate": 0.476,
+    "Water": 0.1998
+   },
+   "phases": []
+  },
+  "WASTEWATER": {
+   "stream": "WASTEWATER",
+   "T_C": 101.34,
+   "P_bar": 1.063,
+   "mol_s": 1.0392,
+   "kg_s": 0.01999,
+   "x": {
+    "Ethanol": 0.0,
+    "Acetic acid": 0.029,
+    "Water": 0.971
+   },
+   "w": {
+    "Ethanol": 0.0,
+    "Acetic acid": 0.0905,
+    "Water": 0.9095
+   },
+   "phases": []
+  }
+ },
+ "U5-ESTCOL": {
+  "calculated": true,
+  "duties_kW": {
+   "condenser": 317.3343062085644,
+   "reboiler": -290.18152257653935
+  },
+  "T_profile_C": [
+   70.7,
+   82.1,
+   95.3,
+   97.1,
+   97.7,
+   98.4,
+   99.3,
+   100.9,
+   103.5,
+   110.3,
+   115.6,
+   118.9
+  ]
+ },
+ "U8-DRYCOL": {
+  "calculated": true,
+  "duties_kW": {
+   "condenser": 69.58915819677294,
+   "reboiler": -73.57722948055161
+  },
+  "T_profile_C": [
+   69.7,
+   69.8,
+   69.9,
+   70.1,
+   70.2,
+   70.7,
+   70.8,
+   71.0,
+   71.2,
+   72.0,
+   74.0,
+   78.4
+  ]
+ },
+ "U11-ALCCOL": {
+  "calculated": true,
+  "duties_kW": {
+   "condenser": 21.39672908759909,
+   "reboiler": -27.592457775363624
+  },
+  "T_profile_C": [
+   70.7,
+   82.7,
+   93.4,
+   95.0,
+   95.3,
+   99.7,
+   100.6,
+   101.0,
+   101.2,
+   101.3
+  ]
+ }
+}

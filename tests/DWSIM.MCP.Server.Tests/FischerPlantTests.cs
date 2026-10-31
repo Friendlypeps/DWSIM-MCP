@@ -297,14 +297,19 @@ namespace DWSIM.MCP.Server.Tests
                 flowsheet_id = id, name = "CS-1", specified_outlet = 0,
                 specs = new JObject { ["Ethanol"] = 90, ["Acetic acid"] = new JObject { ["type"] = "PercentInletMolarFlow", ["value"] = 10 } }
             });
-            Assert.Equal(2, specs["specs"].Count());
-            Assert.Contains(specs["unspecified_compounds_go_to_other_outlet"], c => c.ToString() == "Water");
+            Assert.Equal(4, specs["specs"].Count()); // two given + a 0 % entry for each of the other two compounds
+            Assert.Empty(specs["unspecified_compounds_go_to_other_outlet"]);
             Solve(id);
             var feed = _f.Call("dwsim_stream_get_results", new { flowsheet_id = id, name = "FEED" });
             var feedEthanol = (double)feed["molar_flow_mol_s"] * (double)feed["phases"][0]["compounds"]["Ethanol"]["mole_fraction"];
             var out1 = _f.Call("dwsim_stream_get_results", new { flowsheet_id = id, name = "OUT1" });
             var ethanolFlow = (double)out1["molar_flow_mol_s"] * (double)out1["phases"][0]["compounds"]["Ethanol"]["mole_fraction"];
             Assert.Equal(0.9 * feedEthanol, ethanolFlow, 3);
+            // the engine sends a compound without an entry to neither outlet; the tool writes a 0 % entry for every
+            // other compound so that the two outlets together carry the whole feed
+            var out2 = _f.Call("dwsim_stream_get_results", new { flowsheet_id = id, name = "OUT2" });
+            Assert.Equal((double)feed["molar_flow_mol_s"], (double)out1["molar_flow_mol_s"] + (double)out2["molar_flow_mol_s"], 4);
+            Assert.Contains(specs["specs"], sp => sp["compound"].ToString() == "Water" && (double)sp["value"] == 0.0);
 
             _f.Call("dwsim_unitop_add", new { flowsheet_id = id, type = "Vessel", name = "V-1" });
             var listed = _f.Call("dwsim_unitop_set_mode", new { flowsheet_id = id, name = "V-1" });

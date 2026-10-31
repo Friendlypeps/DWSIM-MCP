@@ -1,0 +1,843 @@
+{
+ "plant": "etoac_dehydrogenation/patent US6809217B1",
+ "flowsheet_id": "aaa5efba79a1",
+ "assumptions": [
+  "fresh ethanol 1.0 mol/s at 16.2 bar / 30 C (stated boundary conditions); feed ethanol anhydrous",
+  "hydrogen recycle to the superheater starts as 0.3 mol/s (document: hydrogen-rich gas from knockout pot 26, compressed to 15.5 bar); the closed loop sets its real value",
+  "superheater outlet pressure 14.8 bar is stated; here the pressure follows the feed (16.2 bar) minus 0.35 bar per reactor so reactor 22 leaves at about 14.8 bar",
+  "reheaters 12, 16 (figure only) and 20 bring the gas back to 235 C, the stated reactor 10 inlet temperature; each bed leaves at 212.5 C, the stated reactor 10 exit window 205-220 C (the beds are adiabatic in the patent; with DWSIM's NRTL enthalpies an adiabatic equilibrium bed warmed up instead, so the stated exit temperature is imposed and the duty the engine then reports is a measure of that inconsistency)",
+  "gas split: 20 % recycled to compressor 29, 75 % purged (hydrogen is the co-product), 5 % to compressor 35 (not stated)",
+  "hydrogenation reactor 38 adiabatic at the mixed-feed pressure; acetaldehyde fully hydrogenated",
+  "the dissolved hydrogen is removed completely ahead of column 40 (condenser 48 purge, line 49) as a specified split: a trace of hydrogen in the total condenser pushed the column's top temperature to 4 C",
+  "column 40: 20 stages, total condenser (the hydrogen leaves in the knock-out ahead of it as the line-49 purge), feed stage 10, top 1.5 bar (stated), 0.1 bar drop; the ester/ethanol azeotrope is taken as the liquid distillate and sent to column 52 (the patent's side draw 51); the side draw itself is not drawn",
+  "column 40 bottoms draw = feed - 1.3 x the ester fed; reboiler 43 is the column's own reboiler",
+  "column 52: 20 stages, total condenser, feed stage 10, top 12 bar (stated), 0.2 bar drop; bottoms draw from the azeotrope balance below (the stated product is 'substantially pure ethyl acetate')",
+  "column 52 bottoms draw 0.0990 mol/s from the ester balance with a 28 mol% ester azeotrope overhead at 12 bar",
+  "water removal package 46: 99 % of the water removed, specified not simulated"
+ ],
+ "stages": {
+  "1_reactor_section_open": {
+   "ok": true,
+   "errors": []
+  },
+  "1b_hydrogen_recycle_closed": {
+   "ok": true,
+   "errors": []
+  },
+  "2_column_40": {
+   "ok": true,
+   "errors": []
+  },
+  "3a_column_52_open": {
+   "ok": true,
+   "errors": []
+  },
+  "3_loops_open": {
+   "ok": true,
+   "errors": [],
+   "note": "D52-DIST-LP (return to column 40) and LINE-2-HP (ethanol recycle) left open"
+  }
+ },
+ "checks": {
+  "R10_outlet_T_C (doc 205-220)": 212.5,
+  "R22_outlet_P_bar (doc 14.8)": 14.1,
+  "ethanol_conversion_overall_pct": null,
+  "D40_top_T_C (doc 72)": 83.1,
+  "D40_bottom_T_C (doc 73)": 86.7,
+  "D52_top_T_C (doc 160)": 157.2,
+  "D52_bottom_T_C (doc 204)": 178.2,
+  "product_ester_wt_frac": 0.9977,
+  "product_mol_s_per_mol_ethanol_feed": 0.09897
+ },
+ "bips_missing_before_estimate": [
+  "Ethanol / Hydrogen",
+  "Ethanol / Acetaldehyde",
+  "Ethyl acetate / Hydrogen",
+  "Ethyl acetate / Acetaldehyde",
+  "Hydrogen / Acetaldehyde",
+  "Hydrogen / Water",
+  "Acetaldehyde / Water"
+ ],
+ "streams": {
+  "ETHANOL-FEED": {
+   "stream": "ETHANOL-FEED",
+   "T_C": 30.0,
+   "P_bar": 16.2,
+   "mol_s": 1.0,
+   "kg_s": 0.04607,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "E4-FEED": {
+   "stream": "E4-FEED",
+   "T_C": 30.0,
+   "P_bar": 16.2,
+   "mol_s": 1.0,
+   "kg_s": 0.04607,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "E4-OUT": {
+   "stream": "E4-OUT",
+   "T_C": 166.0,
+   "P_bar": 16.2,
+   "mol_s": 1.0,
+   "kg_s": 0.04607,
+   "x": {
+    "Ethanol": 1.0
+   },
+   "w": {
+    "Ethanol": 1.0
+   },
+   "phases": []
+  },
+  "H2-RCY-GUESS": {
+   "stream": "H2-RCY-GUESS",
+   "T_C": 40.0,
+   "P_bar": 15.5,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.02,
+    "Ethyl acetate": 0.01,
+    "Hydrogen": 0.97
+   },
+   "w": {
+    "Ethanol": 0.2452,
+    "Ethyl acetate": 0.2345,
+    "Hydrogen": 0.5204
+   },
+   "phases": []
+  },
+  "SH8-FEED": {
+   "stream": "SH8-FEED",
+   "T_C": 141.55,
+   "P_bar": 15.5,
+   "mol_s": 1.12269,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.8908,
+    "Ethyl acetate": 0.0001,
+    "Hydrogen": 0.1091,
+    "Acetaldehyde": 0.0
+   },
+   "w": {
+    "Ethanol": 0.9945,
+    "Ethyl acetate": 0.0002,
+    "Hydrogen": 0.0053,
+    "Acetaldehyde": 0.0
+   },
+   "phases": []
+  },
+  "LINE-9": {
+   "stream": "LINE-9",
+   "T_C": 235.0,
+   "P_bar": 15.5,
+   "mol_s": 1.12269,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.8908,
+    "Ethyl acetate": 0.0001,
+    "Hydrogen": 0.1091,
+    "Acetaldehyde": 0.0
+   },
+   "w": {
+    "Ethanol": 0.9945,
+    "Ethyl acetate": 0.0002,
+    "Hydrogen": 0.0053,
+    "Acetaldehyde": 0.0
+   },
+   "phases": []
+  },
+  "R10-OUT": {
+   "stream": "R10-OUT",
+   "T_C": 212.5,
+   "P_bar": 15.15,
+   "mol_s": 1.36606,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3784,
+    "Ethyl acetate": 0.1756,
+    "Hydrogen": 0.4434,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.514,
+    "Ethyl acetate": 0.4562,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "R10-LIQ": {
+   "stream": "R10-LIQ",
+   "T_C": 212.5,
+   "P_bar": 15.15,
+   "mol_s": -0.0,
+   "kg_s": -0.0,
+   "x": {
+    "Ethanol": 0.3784,
+    "Ethyl acetate": 0.1756,
+    "Hydrogen": 0.4434,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.514,
+    "Ethyl acetate": 0.4562,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "H12-OUT": {
+   "stream": "H12-OUT",
+   "T_C": 235.0,
+   "P_bar": 15.15,
+   "mol_s": 1.36606,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3784,
+    "Ethyl acetate": 0.1756,
+    "Hydrogen": 0.4434,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.514,
+    "Ethyl acetate": 0.4562,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "R14-OUT": {
+   "stream": "R14-OUT",
+   "T_C": 212.5,
+   "P_bar": 14.8,
+   "mol_s": 1.36689,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.377,
+    "Ethyl acetate": 0.1761,
+    "Hydrogen": 0.4443,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.5124,
+    "Ethyl acetate": 0.4577,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "R14-LIQ": {
+   "stream": "R14-LIQ",
+   "T_C": 212.5,
+   "P_bar": 14.8,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.377,
+    "Ethyl acetate": 0.1761,
+    "Hydrogen": 0.4443,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.5124,
+    "Ethyl acetate": 0.4577,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "HX16-OUT": {
+   "stream": "HX16-OUT",
+   "T_C": 235.0,
+   "P_bar": 14.8,
+   "mol_s": 1.36689,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.377,
+    "Ethyl acetate": 0.1761,
+    "Hydrogen": 0.4443,
+    "Acetaldehyde": 0.0026
+   },
+   "w": {
+    "Ethanol": 0.5124,
+    "Ethyl acetate": 0.4577,
+    "Hydrogen": 0.0264,
+    "Acetaldehyde": 0.0034
+   },
+   "phases": []
+  },
+  "R18-OUT": {
+   "stream": "R18-OUT",
+   "T_C": 212.5,
+   "P_bar": 14.45,
+   "mol_s": 1.36831,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3745,
+    "Ethyl acetate": 0.1769,
+    "Hydrogen": 0.4459,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5096,
+    "Ethyl acetate": 0.4603,
+    "Hydrogen": 0.0265,
+    "Acetaldehyde": 0.0035
+   },
+   "phases": []
+  },
+  "R18-LIQ": {
+   "stream": "R18-LIQ",
+   "T_C": 212.5,
+   "P_bar": 14.45,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.3745,
+    "Ethyl acetate": 0.1769,
+    "Hydrogen": 0.4459,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5096,
+    "Ethyl acetate": 0.4603,
+    "Hydrogen": 0.0265,
+    "Acetaldehyde": 0.0035
+   },
+   "phases": []
+  },
+  "E20-OUT": {
+   "stream": "E20-OUT",
+   "T_C": 235.0,
+   "P_bar": 14.45,
+   "mol_s": 1.36831,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3745,
+    "Ethyl acetate": 0.1769,
+    "Hydrogen": 0.4459,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5096,
+    "Ethyl acetate": 0.4603,
+    "Hydrogen": 0.0265,
+    "Acetaldehyde": 0.0035
+   },
+   "phases": []
+  },
+  "R22-OUT": {
+   "stream": "R22-OUT",
+   "T_C": 212.5,
+   "P_bar": 14.1,
+   "mol_s": 1.36973,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3721,
+    "Ethyl acetate": 0.1777,
+    "Hydrogen": 0.4475,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5069,
+    "Ethyl acetate": 0.4629,
+    "Hydrogen": 0.0267,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "R22-LIQ": {
+   "stream": "R22-LIQ",
+   "T_C": 212.5,
+   "P_bar": 14.1,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Ethanol": 0.3721,
+    "Ethyl acetate": 0.1777,
+    "Hydrogen": 0.4475,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5069,
+    "Ethyl acetate": 0.4629,
+    "Hydrogen": 0.0267,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "KO26-FEED": {
+   "stream": "KO26-FEED",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 1.36973,
+   "kg_s": 0.04633,
+   "x": {
+    "Ethanol": 0.3721,
+    "Ethyl acetate": 0.1777,
+    "Hydrogen": 0.4475,
+    "Acetaldehyde": 0.0027
+   },
+   "w": {
+    "Ethanol": 0.5069,
+    "Ethyl acetate": 0.4629,
+    "Hydrogen": 0.0267,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "LINE-27-GAS": {
+   "stream": "LINE-27-GAS",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 0.61343,
+   "kg_s": 0.00129,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-32-CONDENSATE": {
+   "stream": "LINE-32-CONDENSATE",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 0.7563,
+   "kg_s": 0.04504,
+   "x": {
+    "Ethanol": 0.6736,
+    "Ethyl acetate": 0.3213,
+    "Hydrogen": 0.0003,
+    "Acetaldehyde": 0.0049
+   },
+   "w": {
+    "Ethanol": 0.5211,
+    "Ethyl acetate": 0.4753,
+    "Hydrogen": 0.0,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "LINE-28": {
+   "stream": "LINE-28",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 0.12269,
+   "kg_s": 0.00026,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-31-PURGE": {
+   "stream": "LINE-31-PURGE",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 0.46007,
+   "kg_s": 0.00096,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-30": {
+   "stream": "LINE-30",
+   "T_C": -10.0,
+   "P_bar": 14.1,
+   "mol_s": 0.03067,
+   "kg_s": 6e-05,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-6-H2RCY": {
+   "stream": "LINE-6-H2RCY",
+   "T_C": -4.57,
+   "P_bar": 15.5,
+   "mol_s": 0.12269,
+   "kg_s": 0.00026,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-36": {
+   "stream": "LINE-36",
+   "T_C": 61.84,
+   "P_bar": 43.1,
+   "mol_s": 0.03067,
+   "kg_s": 6e-05,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-34": {
+   "stream": "LINE-34",
+   "T_C": 70.0,
+   "P_bar": 14.1,
+   "mol_s": 0.7563,
+   "kg_s": 0.04504,
+   "x": {
+    "Ethanol": 0.6736,
+    "Ethyl acetate": 0.3213,
+    "Hydrogen": 0.0003,
+    "Acetaldehyde": 0.0049
+   },
+   "w": {
+    "Ethanol": 0.5211,
+    "Ethyl acetate": 0.4753,
+    "Hydrogen": 0.0,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "R38-FEED": {
+   "stream": "R38-FEED",
+   "T_C": 69.27,
+   "P_bar": 14.1,
+   "mol_s": 0.78697,
+   "kg_s": 0.0451,
+   "x": {
+    "Ethanol": 0.6474,
+    "Ethyl acetate": 0.3088,
+    "Hydrogen": 0.0392,
+    "Acetaldehyde": 0.0047
+   },
+   "w": {
+    "Ethanol": 0.5204,
+    "Ethyl acetate": 0.4747,
+    "Hydrogen": 0.0014,
+    "Acetaldehyde": 0.0036
+   },
+   "phases": []
+  },
+  "R38-VAP": {
+   "stream": "R38-VAP",
+   "T_C": 71.58,
+   "P_bar": 14.1,
+   "mol_s": 0.02909,
+   "kg_s": 0.00019,
+   "x": {
+    "Ethanol": 0.0414,
+    "Ethyl acetate": 0.0298,
+    "Hydrogen": 0.9287
+   },
+   "w": {
+    "Ethanol": 0.2976,
+    "Ethyl acetate": 0.4103,
+    "Hydrogen": 0.2921
+   },
+   "phases": []
+  },
+  "R38-LIQ": {
+   "stream": "R38-LIQ",
+   "T_C": 71.58,
+   "P_bar": 14.1,
+   "mol_s": 0.75418,
+   "kg_s": 0.04492,
+   "x": {
+    "Ethanol": 0.6788,
+    "Ethyl acetate": 0.321,
+    "Hydrogen": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.5251,
+    "Ethyl acetate": 0.4749,
+    "Hydrogen": 0.0
+   },
+   "phases": []
+  },
+  "LINE-39": {
+   "stream": "LINE-39",
+   "T_C": 71.58,
+   "P_bar": 14.1,
+   "mol_s": 0.78327,
+   "kg_s": 0.0451,
+   "x": {
+    "Ethanol": 0.6551,
+    "Ethyl acetate": 0.3102,
+    "Hydrogen": 0.0346
+   },
+   "w": {
+    "Ethanol": 0.5241,
+    "Ethyl acetate": 0.4747,
+    "Hydrogen": 0.0012
+   },
+   "phases": []
+  },
+  "LINE-6-R": {
+   "stream": "LINE-6-R",
+   "T_C": -4.57,
+   "P_bar": 15.5,
+   "mol_s": 0.12269,
+   "kg_s": 0.00026,
+   "x": {
+    "Ethanol": 0.0004,
+    "Ethyl acetate": 0.0007,
+    "Hydrogen": 0.9988,
+    "Acetaldehyde": 0.0001
+   },
+   "w": {
+    "Ethanol": 0.0092,
+    "Ethyl acetate": 0.0289,
+    "Hydrogen": 0.9599,
+    "Acetaldehyde": 0.0019
+   },
+   "phases": []
+  },
+  "LINE-39-LP": {
+   "stream": "LINE-39-LP",
+   "T_C": 65.01,
+   "P_bar": 1.6,
+   "mol_s": 0.78327,
+   "kg_s": 0.0451,
+   "x": {
+    "Ethanol": 0.6551,
+    "Ethyl acetate": 0.3102,
+    "Hydrogen": 0.0346
+   },
+   "w": {
+    "Ethanol": 0.5241,
+    "Ethyl acetate": 0.4747,
+    "Hydrogen": 0.0012
+   },
+   "phases": []
+  },
+  "LINE-49-PURGE": {
+   "stream": "LINE-49-PURGE",
+   "T_C": 65.01,
+   "P_bar": 1.6,
+   "mol_s": 0.02713,
+   "kg_s": 5e-05,
+   "x": {
+    "Hydrogen": 1.0
+   },
+   "w": {
+    "Hydrogen": 1.0
+   },
+   "phases": []
+  },
+  "COL40-FEED": {
+   "stream": "COL40-FEED",
+   "T_C": 65.01,
+   "P_bar": 1.6,
+   "mol_s": 0.75614,
+   "kg_s": 0.04505,
+   "x": {
+    "Ethanol": 0.6786,
+    "Ethyl acetate": 0.3214
+   },
+   "w": {
+    "Ethanol": 0.5248,
+    "Ethyl acetate": 0.4752
+   },
+   "phases": []
+  },
+  "LINE-51-SIDE": {
+   "stream": "LINE-51-SIDE",
+   "T_C": 83.13,
+   "P_bar": 1.5,
+   "mol_s": 0.31475,
+   "kg_s": 0.0212,
+   "x": {
+    "Ethanol": 0.4936,
+    "Ethyl acetate": 0.5064
+   },
+   "w": {
+    "Ethanol": 0.3376,
+    "Ethyl acetate": 0.6624
+   },
+   "phases": []
+  },
+  "LINE-41-BTM": {
+   "stream": "LINE-41-BTM",
+   "T_C": 86.71,
+   "P_bar": 1.6,
+   "mol_s": 0.44139,
+   "kg_s": 0.02385,
+   "x": {
+    "Ethanol": 0.8106,
+    "Ethyl acetate": 0.1894
+   },
+   "w": {
+    "Ethanol": 0.6911,
+    "Ethyl acetate": 0.3089
+   },
+   "phases": []
+  },
+  "COL52-FEED": {
+   "stream": "COL52-FEED",
+   "T_C": 83.31,
+   "P_bar": 12.3,
+   "mol_s": 0.31475,
+   "kg_s": 0.0212,
+   "x": {
+    "Ethanol": 0.4936,
+    "Ethyl acetate": 0.5064
+   },
+   "w": {
+    "Ethanol": 0.3376,
+    "Ethyl acetate": 0.6624
+   },
+   "phases": []
+  },
+  "LINE-53-PRODUCT": {
+   "stream": "LINE-53-PRODUCT",
+   "T_C": 178.21,
+   "P_bar": 12.2,
+   "mol_s": 0.09897,
+   "kg_s": 0.0087,
+   "x": {
+    "Ethanol": 0.0043,
+    "Ethyl acetate": 0.9957
+   },
+   "w": {
+    "Ethanol": 0.0023,
+    "Ethyl acetate": 0.9977
+   },
+   "phases": []
+  },
+  "D52-DIST": {
+   "stream": "D52-DIST",
+   "T_C": 157.15,
+   "P_bar": 12.0,
+   "mol_s": 0.21578,
+   "kg_s": 0.0125,
+   "x": {
+    "Ethanol": 0.718,
+    "Ethyl acetate": 0.282
+   },
+   "w": {
+    "Ethanol": 0.5711,
+    "Ethyl acetate": 0.4289
+   },
+   "phases": []
+  },
+  "P46-WATER": {
+   "stream": "P46-WATER",
+   "T_C": 86.71,
+   "P_bar": 1.6,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {},
+   "w": {},
+   "phases": []
+  },
+  "LINE-2-ETOH-RCY": {
+   "stream": "LINE-2-ETOH-RCY",
+   "T_C": 86.71,
+   "P_bar": 1.6,
+   "mol_s": 0.44139,
+   "kg_s": 0.02385,
+   "x": {
+    "Ethanol": 0.8106,
+    "Ethyl acetate": 0.1894
+   },
+   "w": {
+    "Ethanol": 0.6911,
+    "Ethyl acetate": 0.3089
+   },
+   "phases": []
+  },
+  "LINE-2-HP": {
+   "stream": "LINE-2-HP",
+   "T_C": 87.62,
+   "P_bar": 16.2,
+   "mol_s": 0.44139,
+   "kg_s": 0.02385,
+   "x": {
+    "Ethanol": 0.8106,
+    "Ethyl acetate": 0.1894
+   },
+   "w": {
+    "Ethanol": 0.6911,
+    "Ethyl acetate": 0.3089
+   },
+   "phases": []
+  },
+  "D52-DIST-LP": {
+   "stream": "D52-DIST-LP",
+   "T_C": 86.04,
+   "P_bar": 1.6,
+   "mol_s": 0.21578,
+   "kg_s": 0.0125,
+   "x": {
+    "Ethanol": 0.718,
+    "Ethyl acetate": 0.282
+   },
+   "w": {
+    "Ethanol": 0.5711,
+    "Ethyl acetate": 0.4289
+   },
+   "phases": []
+  }
+ }
+}

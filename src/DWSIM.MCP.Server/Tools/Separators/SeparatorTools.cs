@@ -95,6 +95,13 @@ namespace DWSIM.MCPServer.Tools.Separators
                 }
                 sep.ComponentSepSpecs[comp] = new ComponentSeparationSpec(comp, type, value, unit);
             }
+            // The engine sends a compound with no entry to neither outlet (it leaves the balance), not to the
+            // other outlet as the description promises; an explicit 0 % entry makes the promise hold.
+            foreach (var comp in fs.Inner.SelectedCompounds.Keys)
+            {
+                if (!sep.ComponentSepSpecs.ContainsKey(comp))
+                    sep.ComponentSepSpecs[comp] = new ComponentSeparationSpec(comp, SeparationSpec.PercentInletMolarFlow, 0.0, "");
+            }
             fs.Inner.ResetCalculationStatus();
             return DescribeCompSep(fs, sep);
         }

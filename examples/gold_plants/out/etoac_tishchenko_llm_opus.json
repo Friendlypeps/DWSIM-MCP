@@ -1,0 +1,362 @@
+{
+ "plant": "etoac_tishchenko/llm_opus",
+ "flowsheet_id": "e8d7b5bd1187",
+ "assumptions": [
+  "acetaldehyde feed 1.0 mol/s from storage at 15 C and 1.5 bar (kept cooled, under nitrogen; no values stated); the nitrogen blanket is not a process stream",
+  "catalyst solution (aluminium ethoxide in ethyl acetate) enters as 0.02 mol/s ethyl acetate carrier at 15 C; the alkoxide itself has no compound",
+  "feed cooler outlet 10 C ('close to the reaction temperature'); reactor isothermal at 10 C (stated 0-20 C), 1 atm",
+  "catalyst deactivation D1: 0.01 mol/s water added ('a small amount of water'); the alkoxide hydrolysis itself is not modelled",
+  "solids separator S1: aluminium hydroxide is not a compound, so the unit passes the whole liquid to the column",
+  "C1 acetaldehyde column: 15 stages, total condenser (CD1, chilled), feed stage 7, 1 atm top (stated), 0.1 bar drop, reflux ratio 2; distillate = 1.05 x the acetaldehyde fed (so the bottoms are acetaldehyde-free)",
+  "C2 ethyl acetate column: 15 stages, total condenser, feed stage 7, 1 atm, 0.1 bar drop, reflux ratio 2; distillate = 95 % of the feed; no heavy by-products exist in the basis, so the 5 % bottoms purge is ester with the water that stays behind",
+  "product cooler to 25 C (ambient, cooling water); T2 product storage is the PRODUCT-T2 stream",
+  "C2 column loop tolerances loosened to 1e-3 (its mass-balance check on the acetaldehyde trace failed at the default)"
+ ],
+ "stages": {
+  "1_reaction": {
+   "ok": true,
+   "errors": []
+  },
+  "2_acetaldehyde_column": {
+   "ok": true,
+   "errors": []
+  },
+  "2b_acetaldehyde_recycle_closed": {
+   "ok": false,
+   "errors": [
+    "The solver was unable to calculate the flowsheet within the specified timeout limit."
+   ]
+  },
+  "3_ester_column": {
+   "ok": false,
+   "errors": [
+    "C2-ESTER-COL: Failed to fulfill mass balance for Acetaldehyde: Relative Error = -0.007756480290041645 [Tolerance = 0.0001]"
+   ]
+  },
+  "3b_ester_column_loose_tolerance": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ "checks": {
+  "R1_duty_kW": null,
+  "C1_condenser_T_C (acetaldehyde boils at 20 C: chilled water/brine)": 28.0,
+  "C1_duties_kW": {
+   "condenser": 1.874136093393586,
+   "reboiler": -7.988899752248431
+  },
+  "C2_top_T_C (ester boils at 77 C)": 74.0,
+  "C2_bottom_T_C": 80.1,
+  "product_ester_wt_frac (spec > 0.995)": 0.9919,
+  "product_mol_s": 0.49307
+ },
+ "bips_missing_before_estimate": [
+  "Acetaldehyde / Ethyl acetate",
+  "Acetaldehyde / Ethanol",
+  "Acetaldehyde / Water"
+ ],
+ "streams": {
+  "ACETALDEHYDE": {
+   "stream": "ACETALDEHYDE",
+   "T_C": 15.0,
+   "P_bar": 1.5,
+   "mol_s": 1.0,
+   "kg_s": 0.04405,
+   "x": {
+    "Acetaldehyde": 1.0
+   },
+   "w": {
+    "Acetaldehyde": 1.0
+   },
+   "phases": []
+  },
+  "CATALYST-SOLN": {
+   "stream": "CATALYST-SOLN",
+   "T_C": 15.0,
+   "P_bar": 1.5,
+   "mol_s": 0.02,
+   "kg_s": 0.00176,
+   "x": {
+    "Ethyl acetate": 1.0
+   },
+   "w": {
+    "Ethyl acetate": 1.0
+   },
+   "phases": []
+  },
+  "E1-FEED": {
+   "stream": "E1-FEED",
+   "T_C": 15.03,
+   "P_bar": 1.013,
+   "mol_s": 1.0,
+   "kg_s": 0.04405,
+   "x": {
+    "Acetaldehyde": 1.0
+   },
+   "w": {
+    "Acetaldehyde": 1.0
+   },
+   "phases": []
+  },
+  "ACETALDEHYDE-CHILLED": {
+   "stream": "ACETALDEHYDE-CHILLED",
+   "T_C": 10.0,
+   "P_bar": 1.013,
+   "mol_s": 1.0,
+   "kg_s": 0.04405,
+   "x": {
+    "Acetaldehyde": 1.0
+   },
+   "w": {
+    "Acetaldehyde": 1.0
+   },
+   "phases": []
+  },
+  "R1-FEED": {
+   "stream": "R1-FEED",
+   "T_C": 10.15,
+   "P_bar": 1.013,
+   "mol_s": 1.02,
+   "kg_s": 0.04581,
+   "x": {
+    "Acetaldehyde": 0.9804,
+    "Ethyl acetate": 0.0196
+   },
+   "w": {
+    "Acetaldehyde": 0.9615,
+    "Ethyl acetate": 0.0385
+   },
+   "phases": []
+  },
+  "R1-VAP": {
+   "stream": "R1-VAP",
+   "T_C": 10.15,
+   "P_bar": 0.513,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Acetaldehyde": 0.0377,
+    "Ethyl acetate": 0.9623
+   },
+   "w": {
+    "Acetaldehyde": 0.0192,
+    "Ethyl acetate": 0.9808
+   },
+   "phases": []
+  },
+  "R1-LIQ": {
+   "stream": "R1-LIQ",
+   "T_C": 10.15,
+   "P_bar": 0.513,
+   "mol_s": 0.53,
+   "kg_s": 0.04581,
+   "x": {
+    "Acetaldehyde": 0.0377,
+    "Ethyl acetate": 0.9623
+   },
+   "w": {
+    "Acetaldehyde": 0.0192,
+    "Ethyl acetate": 0.9808
+   },
+   "phases": []
+  },
+  "CRUDE-EFFLUENT": {
+   "stream": "CRUDE-EFFLUENT",
+   "T_C": 10.15,
+   "P_bar": 0.513,
+   "mol_s": 0.53,
+   "kg_s": 0.04581,
+   "x": {
+    "Acetaldehyde": 0.0377,
+    "Ethyl acetate": 0.9623
+   },
+   "w": {
+    "Acetaldehyde": 0.0192,
+    "Ethyl acetate": 0.9808
+   },
+   "phases": []
+  },
+  "WATER-D1": {
+   "stream": "WATER-D1",
+   "T_C": 20.0,
+   "P_bar": 1.0,
+   "mol_s": 0.01,
+   "kg_s": 0.00018,
+   "x": {
+    "Water": 1.0
+   },
+   "w": {
+    "Water": 1.0
+   },
+   "phases": []
+  },
+  "CRUDE-ESTER": {
+   "stream": "CRUDE-ESTER",
+   "T_C": 10.24,
+   "P_bar": 0.513,
+   "mol_s": 0.54,
+   "kg_s": 0.04599,
+   "x": {
+    "Acetaldehyde": 0.037,
+    "Ethyl acetate": 0.9444,
+    "Water": 0.0185
+   },
+   "w": {
+    "Acetaldehyde": 0.0192,
+    "Ethyl acetate": 0.9769,
+    "Water": 0.0039
+   },
+   "phases": []
+  },
+  "SOLIDS-WASTE": {
+   "stream": "SOLIDS-WASTE",
+   "T_C": 10.24,
+   "P_bar": 0.513,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {},
+   "w": {},
+   "phases": []
+  },
+  "CLARIFIED": {
+   "stream": "CLARIFIED",
+   "T_C": 10.24,
+   "P_bar": 0.513,
+   "mol_s": 0.54,
+   "kg_s": 0.04599,
+   "x": {
+    "Acetaldehyde": 0.037,
+    "Ethyl acetate": 0.9444,
+    "Water": 0.0185
+   },
+   "w": {
+    "Acetaldehyde": 0.0192,
+    "Ethyl acetate": 0.9769,
+    "Water": 0.0039
+   },
+   "phases": []
+  },
+  "C1-DIST": {
+   "stream": "C1-DIST",
+   "T_C": 27.98,
+   "P_bar": 1.013,
+   "mol_s": 0.02098,
+   "kg_s": 0.00106,
+   "x": {
+    "Acetaldehyde": 0.7487,
+    "Ethyl acetate": 0.1824,
+    "Water": 0.0688
+   },
+   "w": {
+    "Acetaldehyde": 0.6558,
+    "Ethyl acetate": 0.3196,
+    "Water": 0.0246
+   },
+   "phases": []
+  },
+  "C1-BTM": {
+   "stream": "C1-BTM",
+   "T_C": 77.02,
+   "P_bar": 1.113,
+   "mol_s": 0.51902,
+   "kg_s": 0.04494,
+   "x": {
+    "Acetaldehyde": 0.0083,
+    "Ethyl acetate": 0.9752,
+    "Water": 0.0165
+   },
+   "w": {
+    "Acetaldehyde": 0.0042,
+    "Ethyl acetate": 0.9924,
+    "Water": 0.0034
+   },
+   "phases": []
+  },
+  "C1-DIST-P": {
+   "stream": "C1-DIST-P",
+   "T_C": 27.99,
+   "P_bar": 1.5,
+   "mol_s": 0.02098,
+   "kg_s": 0.00106,
+   "x": {
+    "Acetaldehyde": 0.7487,
+    "Ethyl acetate": 0.1824,
+    "Water": 0.0688
+   },
+   "w": {
+    "Acetaldehyde": 0.6558,
+    "Ethyl acetate": 0.3196,
+    "Water": 0.0246
+   },
+   "phases": []
+  },
+  "ACETALDEHYDE-RCY": {
+   "stream": "ACETALDEHYDE-RCY",
+   "T_C": 27.99,
+   "P_bar": 1.013,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Acetaldehyde": 0.7486,
+    "Ethyl acetate": 0.1825,
+    "Water": 0.0688
+   },
+   "w": {
+    "Acetaldehyde": 0.6556,
+    "Ethyl acetate": 0.3197,
+    "Water": 0.0247
+   },
+   "phases": []
+  },
+  "C2-DIST": {
+   "stream": "C2-DIST",
+   "T_C": 74.04,
+   "P_bar": 1.013,
+   "mol_s": 0.49307,
+   "kg_s": 0.04265,
+   "x": {
+    "Acetaldehyde": 0.0088,
+    "Ethyl acetate": 0.9737,
+    "Water": 0.0175
+   },
+   "w": {
+    "Acetaldehyde": 0.0045,
+    "Ethyl acetate": 0.9919,
+    "Water": 0.0036
+   },
+   "phases": []
+  },
+  "C2-BTM-HEAVIES": {
+   "stream": "C2-BTM-HEAVIES",
+   "T_C": 80.08,
+   "P_bar": 1.113,
+   "mol_s": 0.02595,
+   "kg_s": 0.00229,
+   "x": {
+    "Ethyl acetate": 1.0
+   },
+   "w": {
+    "Ethyl acetate": 1.0
+   },
+   "phases": []
+  },
+  "PRODUCT-T2": {
+   "stream": "PRODUCT-T2",
+   "T_C": 25.0,
+   "P_bar": 1.013,
+   "mol_s": 0.49307,
+   "kg_s": 0.04265,
+   "x": {
+    "Acetaldehyde": 0.0088,
+    "Ethyl acetate": 0.9737,
+    "Water": 0.0175
+   },
+   "w": {
+    "Acetaldehyde": 0.0045,
+    "Ethyl acetate": 0.9919,
+    "Water": 0.0036
+   },
+   "phases": []
+  }
+ }
+}

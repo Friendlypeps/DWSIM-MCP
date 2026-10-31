@@ -44,7 +44,9 @@ indices raw. `tests/.../ShadowDriftTests.cs` holds the hashes of the upstream or
   `Stage` objects. Shortcut column keys are public fields (`m_lightkey`, ...). There is no reactive
   distillation: `RigorousColumn.vb` has no reaction hooks.
 - **Separators.** `ComponentSeparator.ComponentSepSpecs` entries must be created
-  (`new ComponentSeparationSpec(id, type, value, unit)`); the feed composition given to
+  (`new ComponentSeparationSpec(id, type, value, unit)`); a compound with no entry reaches *neither*
+  outlet (it leaves the balance), so `dwsim_compsep_set_specs` writes a 0 % entry for every compound
+  not named. The feed composition given to
   `dwsim_stream_add_material` is in mass fractions. Vessel and Filter have no `GetCalculationModes`,
   which is why upstream's `PropertySetter` throws on their mode.
 - **Adjust.** Headless, only `SimultaneousAdjust = true` blocks run, inside
@@ -59,6 +61,9 @@ indices raw. `tests/.../ShadowDriftTests.cs` holds the hashes of the upstream or
 - **Scripts.** `FlowsheetBase.RunScript(id)` runs IronPython headlessly with `Flowsheet`, `Solver`
   and every object by tag in scope; output goes through `ShowMessage`, which the shadow
   `McpFlowsheet` forwards to a per-instance sink. Verified by `FischerPlantTests.ScriptRunsHeadless`.
+- **Recycle.** A new material stream, and so a fresh Recycle outlet, is 1 kg/s equimolar at 25 C until
+  something writes it; a loop's first pass sees that unless the tear stream is seeded (the gold-plant
+  scripts copy the open-loop solution into it).
 - **Units.** A new headless flowsheet's `SelectedUnitSystem` is DWSIM's default (C, bar, kW), not
   SI. `GetPropertyValue(prop)` without a unit system returns SI. The tools state the units they take.
 

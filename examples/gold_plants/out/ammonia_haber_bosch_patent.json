@@ -1,0 +1,877 @@
+{
+ "plant": "ammonia_haber_bosch/patent US9040011B2",
+ "flowsheet_id": "1c9ce8a9d4f5",
+ "assumptions": [
+  "natural gas = methane 1.0 mol/s with steam, S/C 3.0, both at 65 bar (stated primary reformer pressure) and 25 C / 300 C",
+  "primary reformer tube outlet 735 C (700-770), 2 bar drop; the secondary reformer gets air 14 and oxygen 15 (the patent mixes both): the air flow is set so that the synthesis gas has H2:N2 = 3 and the oxygen flow so that the secondary outlet reaches the stated 1000 C",
+  "CO shift converters 3 = the 'series (normally two)': two adiabatic equilibrium beds with an intercooler to 200 C between them (the second bed's inlet temperature is not stated); the stated outlet of around 220 C is then a result",
+  "'near ambient' after heat exchanger 19 = 35 C",
+  "CO2 washing column 4: 99.9 % CO2 removal, specified not simulated",
+  "synthesis loop block 6 drawn once-through: preheat to 400 C, equilibrium converter at 450 C and 150 bar, condensation at -15 C, separator; the loop recycle is not described in the patent and not closed here"
+ ],
+ "stages": {
+  "1_once_through": {
+   "ok": true,
+   "errors": []
+  }
+ },
+ "checks": {
+  "air_mol_s": 1.24441,
+  "oxygen_mol_s_for_1000C": 0.21307,
+  "R1_outlet_T_C (doc 700-770)": 735.0,
+  "R2_outlet_T_C (doc ~1000)": 1000.64,
+  "R2_outlet_P_bar (doc ~60)": 60.0,
+  "R3_shift_outlet_T_C (doc ~220 after the series)": 211.42,
+  "R5_methanator_outlet_T_C": 316.92,
+  "syngas_H2_N2_ratio": 3.0064935064935066,
+  "syngas_x": {
+   "Methane": 0.0085,
+   "Water": 0.0011,
+   "Hydrogen": 0.7408,
+   "Nitrogen": 0.2464,
+   "Argon": 0.0032
+  },
+  "ammonia_32_mol_s": 0.62659,
+  "ammonia_32_x": {
+   "Methane": 0.0012,
+   "Water": 0.0069,
+   "Hydrogen": 0.0068,
+   "Nitrogen": 0.0014,
+   "Argon": 0.0008,
+   "Ammonia": 0.983
+  }
+ },
+ "streams": {
+  "NATGAS-7": {
+   "stream": "NATGAS-7",
+   "T_C": 25.0,
+   "P_bar": 65.0,
+   "mol_s": 1.0,
+   "kg_s": 0.01604,
+   "x": {
+    "Methane": 1.0
+   },
+   "w": {
+    "Methane": 1.0
+   },
+   "phases": []
+  },
+  "STEAM-8": {
+   "stream": "STEAM-8",
+   "T_C": 300.0,
+   "P_bar": 65.0,
+   "mol_s": 3.0,
+   "kg_s": 0.05405,
+   "x": {
+    "Water": 1.0
+   },
+   "w": {
+    "Water": 1.0
+   },
+   "phases": []
+  },
+  "LINE-9": {
+   "stream": "LINE-9",
+   "T_C": 256.17,
+   "P_bar": 65.0,
+   "mol_s": 4.0,
+   "kg_s": 0.07009,
+   "x": {
+    "Methane": 0.25,
+    "Water": 0.75
+   },
+   "w": {
+    "Methane": 0.2289,
+    "Water": 0.7711
+   },
+   "phases": []
+  },
+  "LINE-11": {
+   "stream": "LINE-11",
+   "T_C": 550.0,
+   "P_bar": 65.0,
+   "mol_s": 4.0,
+   "kg_s": 0.07009,
+   "x": {
+    "Methane": 0.25,
+    "Water": 0.75
+   },
+   "w": {
+    "Methane": 0.2289,
+    "Water": 0.7711
+   },
+   "phases": []
+  },
+  "LINE-13": {
+   "stream": "LINE-13",
+   "T_C": 735.0,
+   "P_bar": 63.0,
+   "mol_s": 4.73708,
+   "kg_s": 0.07009,
+   "x": {
+    "Methane": 0.1333,
+    "Water": 0.5006,
+    "Hydrogen": 0.2883,
+    "Carbon monoxide": 0.0229,
+    "Carbon dioxide": 0.0549
+   },
+   "w": {
+    "Methane": 0.1445,
+    "Water": 0.6095,
+    "Hydrogen": 0.0393,
+    "Carbon monoxide": 0.0433,
+    "Carbon dioxide": 0.1633
+   },
+   "phases": []
+  },
+  "R1-LIQ": {
+   "stream": "R1-LIQ",
+   "T_C": 735.0,
+   "P_bar": 63.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.1333,
+    "Water": 0.5006,
+    "Hydrogen": 0.2883,
+    "Carbon monoxide": 0.0229,
+    "Carbon dioxide": 0.0549
+   },
+   "w": {
+    "Methane": 0.1445,
+    "Water": 0.6095,
+    "Hydrogen": 0.0393,
+    "Carbon monoxide": 0.0433,
+    "Carbon dioxide": 0.1633
+   },
+   "phases": []
+  },
+  "AIR-14": {
+   "stream": "AIR-14",
+   "T_C": 25.0,
+   "P_bar": 63.0,
+   "mol_s": 1.24441,
+   "kg_s": 0.03605,
+   "x": {
+    "Nitrogen": 0.78,
+    "Oxygen": 0.21,
+    "Argon": 0.01
+   },
+   "w": {
+    "Nitrogen": 0.7542,
+    "Oxygen": 0.232,
+    "Argon": 0.0138
+   },
+   "phases": []
+  },
+  "OXYGEN-15": {
+   "stream": "OXYGEN-15",
+   "T_C": 25.0,
+   "P_bar": 63.0,
+   "mol_s": 0.21307,
+   "kg_s": 0.00682,
+   "x": {
+    "Oxygen": 1.0
+   },
+   "w": {
+    "Oxygen": 1.0
+   },
+   "phases": []
+  },
+  "R2-FEED": {
+   "stream": "R2-FEED",
+   "T_C": 602.62,
+   "P_bar": 63.0,
+   "mol_s": 6.19455,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.1019,
+    "Water": 0.3828,
+    "Hydrogen": 0.2205,
+    "Carbon monoxide": 0.0175,
+    "Carbon dioxide": 0.042,
+    "Nitrogen": 0.1567,
+    "Oxygen": 0.0766,
+    "Argon": 0.002
+   },
+   "w": {
+    "Methane": 0.0897,
+    "Water": 0.3782,
+    "Hydrogen": 0.0244,
+    "Carbon monoxide": 0.0269,
+    "Carbon dioxide": 0.1013,
+    "Nitrogen": 0.2407,
+    "Oxygen": 0.1344,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R2-BURNT": {
+   "stream": "R2-BURNT",
+   "T_C": 1481.21,
+   "P_bar": 62.0,
+   "mol_s": 5.72015,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.1104,
+    "Water": 0.5804,
+    "Hydrogen": 0.0729,
+    "Carbon monoxide": 0.019,
+    "Carbon dioxide": 0.0455,
+    "Nitrogen": 0.1697,
+    "Argon": 0.0022
+   },
+   "w": {
+    "Methane": 0.0897,
+    "Water": 0.5295,
+    "Hydrogen": 0.0074,
+    "Carbon monoxide": 0.0269,
+    "Carbon dioxide": 0.1013,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R2-BURN-LIQ": {
+   "stream": "R2-BURN-LIQ",
+   "T_C": 1481.21,
+   "P_bar": 62.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.1104,
+    "Water": 0.5804,
+    "Hydrogen": 0.0729,
+    "Carbon monoxide": 0.019,
+    "Carbon dioxide": 0.0455,
+    "Nitrogen": 0.1697,
+    "Argon": 0.0022
+   },
+   "w": {
+    "Methane": 0.0897,
+    "Water": 0.5295,
+    "Hydrogen": 0.0074,
+    "Carbon monoxide": 0.0269,
+    "Carbon dioxide": 0.1013,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "LINE-17": {
+   "stream": "LINE-17",
+   "T_C": 1000.64,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.3727,
+    "Hydrogen": 0.3413,
+    "Carbon monoxide": 0.0848,
+    "Carbon dioxide": 0.0559,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.4123,
+    "Hydrogen": 0.0422,
+    "Carbon monoxide": 0.1459,
+    "Carbon dioxide": 0.1511,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R2-LIQ": {
+   "stream": "R2-LIQ",
+   "T_C": 1000.64,
+   "P_bar": 60.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.3727,
+    "Hydrogen": 0.3413,
+    "Carbon monoxide": 0.0848,
+    "Carbon dioxide": 0.0559,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.4123,
+    "Hydrogen": 0.0422,
+    "Carbon monoxide": 0.1459,
+    "Carbon dioxide": 0.1511,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "LINE-18": {
+   "stream": "LINE-18",
+   "T_C": 350.0,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.3727,
+    "Hydrogen": 0.3413,
+    "Carbon monoxide": 0.0848,
+    "Carbon dioxide": 0.0559,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.4123,
+    "Hydrogen": 0.0422,
+    "Carbon monoxide": 0.1459,
+    "Carbon dioxide": 0.1511,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R3A-OUT": {
+   "stream": "R3A-OUT",
+   "T_C": 421.83,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.305,
+    "Hydrogen": 0.409,
+    "Carbon monoxide": 0.0171,
+    "Carbon dioxide": 0.1236,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3374,
+    "Hydrogen": 0.0506,
+    "Carbon monoxide": 0.0294,
+    "Carbon dioxide": 0.3341,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R3A-LIQ": {
+   "stream": "R3A-LIQ",
+   "T_C": 421.83,
+   "P_bar": 60.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.305,
+    "Hydrogen": 0.409,
+    "Carbon monoxide": 0.0171,
+    "Carbon dioxide": 0.1236,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3374,
+    "Hydrogen": 0.0506,
+    "Carbon monoxide": 0.0294,
+    "Carbon dioxide": 0.3341,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R3B-FEED": {
+   "stream": "R3B-FEED",
+   "T_C": 200.0,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.305,
+    "Hydrogen": 0.409,
+    "Carbon monoxide": 0.0171,
+    "Carbon dioxide": 0.1236,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3374,
+    "Hydrogen": 0.0506,
+    "Carbon monoxide": 0.0294,
+    "Carbon dioxide": 0.3341,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "LINE-20": {
+   "stream": "LINE-20",
+   "T_C": 211.42,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.2891,
+    "Hydrogen": 0.4249,
+    "Carbon monoxide": 0.0012,
+    "Carbon dioxide": 0.1395,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3198,
+    "Hydrogen": 0.0526,
+    "Carbon monoxide": 0.0021,
+    "Carbon dioxide": 0.377,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "R3B-LIQ": {
+   "stream": "R3B-LIQ",
+   "T_C": 211.42,
+   "P_bar": 60.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.2891,
+    "Hydrogen": 0.4249,
+    "Carbon monoxide": 0.0012,
+    "Carbon dioxide": 0.1395,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3198,
+    "Hydrogen": 0.0526,
+    "Carbon monoxide": 0.0021,
+    "Carbon dioxide": 0.377,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "LINE-22": {
+   "stream": "LINE-22",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 6.93519,
+   "kg_s": 0.11296,
+   "x": {
+    "Methane": 0.0035,
+    "Water": 0.2891,
+    "Hydrogen": 0.4249,
+    "Carbon monoxide": 0.0012,
+    "Carbon dioxide": 0.1395,
+    "Nitrogen": 0.14,
+    "Argon": 0.0018
+   },
+   "w": {
+    "Methane": 0.0034,
+    "Water": 0.3198,
+    "Hydrogen": 0.0526,
+    "Carbon monoxide": 0.0021,
+    "Carbon dioxide": 0.377,
+    "Nitrogen": 0.2407,
+    "Argon": 0.0044
+   },
+   "phases": []
+  },
+  "LINE-22A": {
+   "stream": "LINE-22A",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 4.92687,
+   "kg_s": 0.07653,
+   "x": {
+    "Methane": 0.0049,
+    "Water": 0.0013,
+    "Hydrogen": 0.5981,
+    "Carbon monoxide": 0.0017,
+    "Carbon dioxide": 0.1945,
+    "Nitrogen": 0.197,
+    "Argon": 0.0025
+   },
+   "w": {
+    "Methane": 0.005,
+    "Water": 0.0015,
+    "Hydrogen": 0.0776,
+    "Carbon monoxide": 0.0031,
+    "Carbon dioxide": 0.5511,
+    "Nitrogen": 0.3553,
+    "Argon": 0.0065
+   },
+   "phases": []
+  },
+  "CONDENSATE-21": {
+   "stream": "CONDENSATE-21",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 2.00832,
+   "kg_s": 0.03642,
+   "x": {
+    "Water": 0.9953,
+    "Hydrogen": 0.0,
+    "Carbon dioxide": 0.0046,
+    "Nitrogen": 0.0
+   },
+   "w": {
+    "Water": 0.9887,
+    "Hydrogen": 0.0,
+    "Carbon dioxide": 0.0113,
+    "Nitrogen": 0.0
+   },
+   "phases": []
+  },
+  "CO2-OFFGAS": {
+   "stream": "CO2-OFFGAS",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 0.95734,
+   "kg_s": 0.04213,
+   "x": {
+    "Carbon dioxide": 1.0
+   },
+   "w": {
+    "Carbon dioxide": 1.0
+   },
+   "phases": []
+  },
+  "LINE-24": {
+   "stream": "LINE-24",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 3.96953,
+   "kg_s": 0.0344,
+   "x": {
+    "Methane": 0.006,
+    "Water": 0.0016,
+    "Hydrogen": 0.7424,
+    "Carbon monoxide": 0.0021,
+    "Carbon dioxide": 0.0002,
+    "Nitrogen": 0.2445,
+    "Argon": 0.0031
+   },
+   "w": {
+    "Methane": 0.0112,
+    "Water": 0.0032,
+    "Hydrogen": 0.1727,
+    "Carbon monoxide": 0.0069,
+    "Carbon dioxide": 0.0012,
+    "Nitrogen": 0.7904,
+    "Argon": 0.0144
+   },
+   "phases": []
+  },
+  "LINE-25": {
+   "stream": "LINE-25",
+   "T_C": 300.0,
+   "P_bar": 60.0,
+   "mol_s": 3.96953,
+   "kg_s": 0.0344,
+   "x": {
+    "Methane": 0.006,
+    "Water": 0.0016,
+    "Hydrogen": 0.7424,
+    "Carbon monoxide": 0.0021,
+    "Carbon dioxide": 0.0002,
+    "Nitrogen": 0.2445,
+    "Argon": 0.0031
+   },
+   "w": {
+    "Methane": 0.0112,
+    "Water": 0.0032,
+    "Hydrogen": 0.1727,
+    "Carbon monoxide": 0.0069,
+    "Carbon dioxide": 0.0012,
+    "Nitrogen": 0.7904,
+    "Argon": 0.0144
+   },
+   "phases": []
+  },
+  "LINE-27": {
+   "stream": "LINE-27",
+   "T_C": 316.92,
+   "P_bar": 60.0,
+   "mol_s": 3.95076,
+   "kg_s": 0.0344,
+   "x": {
+    "Methane": 0.0084,
+    "Water": 0.0042,
+    "Hydrogen": 0.7386,
+    "Nitrogen": 0.2457,
+    "Argon": 0.0031
+   },
+   "w": {
+    "Methane": 0.0155,
+    "Water": 0.0087,
+    "Hydrogen": 0.171,
+    "Nitrogen": 0.7904,
+    "Argon": 0.0144
+   },
+   "phases": []
+  },
+  "R5-LIQ": {
+   "stream": "R5-LIQ",
+   "T_C": 316.92,
+   "P_bar": 60.0,
+   "mol_s": 0.0,
+   "kg_s": 0.0,
+   "x": {
+    "Methane": 0.0084,
+    "Water": 0.0042,
+    "Hydrogen": 0.7386,
+    "Nitrogen": 0.2457,
+    "Argon": 0.0031
+   },
+   "w": {
+    "Methane": 0.0155,
+    "Water": 0.0087,
+    "Hydrogen": 0.171,
+    "Nitrogen": 0.7904,
+    "Argon": 0.0144
+   },
+   "phases": []
+  },
+  "LINE-29": {
+   "stream": "LINE-29",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 3.95076,
+   "kg_s": 0.0344,
+   "x": {
+    "Methane": 0.0084,
+    "Water": 0.0042,
+    "Hydrogen": 0.7386,
+    "Nitrogen": 0.2457,
+    "Argon": 0.0031
+   },
+   "w": {
+    "Methane": 0.0155,
+    "Water": 0.0087,
+    "Hydrogen": 0.171,
+    "Nitrogen": 0.7904,
+    "Argon": 0.0144
+   },
+   "phases": []
+  },
+  "LINE-30-SYNGAS": {
+   "stream": "LINE-30-SYNGAS",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 3.93853,
+   "kg_s": 0.03418,
+   "x": {
+    "Methane": 0.0085,
+    "Water": 0.0011,
+    "Hydrogen": 0.7408,
+    "Nitrogen": 0.2464,
+    "Argon": 0.0032
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.1721,
+    "Nitrogen": 0.7955,
+    "Argon": 0.0145
+   },
+   "phases": []
+  },
+  "CONDENSATE-28": {
+   "stream": "CONDENSATE-28",
+   "T_C": 35.0,
+   "P_bar": 60.0,
+   "mol_s": 0.01222,
+   "kg_s": 0.00022,
+   "x": {
+    "Water": 1.0,
+    "Hydrogen": 0.0,
+    "Nitrogen": 0.0
+   },
+   "w": {
+    "Water": 1.0,
+    "Hydrogen": 0.0,
+    "Nitrogen": 0.0,
+    "Argon": 0.0
+   },
+   "phases": []
+  },
+  "LINE-31": {
+   "stream": "LINE-31",
+   "T_C": 158.91,
+   "P_bar": 150.0,
+   "mol_s": 3.93853,
+   "kg_s": 0.03418,
+   "x": {
+    "Methane": 0.0085,
+    "Water": 0.0011,
+    "Hydrogen": 0.7408,
+    "Nitrogen": 0.2464,
+    "Argon": 0.0032
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.1721,
+    "Nitrogen": 0.7955,
+    "Argon": 0.0145
+   },
+   "phases": []
+  },
+  "L1-FEED": {
+   "stream": "L1-FEED",
+   "T_C": 400.0,
+   "P_bar": 150.0,
+   "mol_s": 3.93853,
+   "kg_s": 0.03418,
+   "x": {
+    "Methane": 0.0085,
+    "Water": 0.0011,
+    "Hydrogen": 0.7408,
+    "Nitrogen": 0.2464,
+    "Argon": 0.0032
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.1721,
+    "Nitrogen": 0.7955,
+    "Argon": 0.0145
+   },
+   "phases": []
+  },
+  "L1-OUT": {
+   "stream": "L1-OUT",
+   "T_C": 450.0,
+   "P_bar": 150.0,
+   "mol_s": 3.2371,
+   "kg_s": 0.03418,
+   "x": {
+    "Methane": 0.0103,
+    "Water": 0.0013,
+    "Hydrogen": 0.5763,
+    "Nitrogen": 0.1915,
+    "Argon": 0.0038,
+    "Ammonia": 0.2167
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.11,
+    "Nitrogen": 0.508,
+    "Argon": 0.0145,
+    "Ammonia": 0.3495
+   },
+   "phases": []
+  },
+  "L1-LIQ": {
+   "stream": "L1-LIQ",
+   "T_C": 450.0,
+   "P_bar": 150.0,
+   "mol_s": -0.0,
+   "kg_s": -0.0,
+   "x": {
+    "Methane": 0.0103,
+    "Water": 0.0013,
+    "Hydrogen": 0.5763,
+    "Nitrogen": 0.1915,
+    "Argon": 0.0038,
+    "Ammonia": 0.2167
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.11,
+    "Nitrogen": 0.508,
+    "Argon": 0.0145,
+    "Ammonia": 0.3495
+   },
+   "phases": []
+  },
+  "L1-COLD": {
+   "stream": "L1-COLD",
+   "T_C": -15.0,
+   "P_bar": 150.0,
+   "mol_s": 3.2371,
+   "kg_s": 0.03418,
+   "x": {
+    "Methane": 0.0103,
+    "Water": 0.0013,
+    "Hydrogen": 0.5763,
+    "Nitrogen": 0.1915,
+    "Argon": 0.0038,
+    "Ammonia": 0.2167
+   },
+   "w": {
+    "Methane": 0.0156,
+    "Water": 0.0023,
+    "Hydrogen": 0.11,
+    "Nitrogen": 0.508,
+    "Argon": 0.0145,
+    "Ammonia": 0.3495
+   },
+   "phases": []
+  },
+  "L1-UNCONVERTED": {
+   "stream": "L1-UNCONVERTED",
+   "T_C": -15.0,
+   "P_bar": 150.0,
+   "mol_s": 2.61051,
+   "kg_s": 0.02355,
+   "x": {
+    "Methane": 0.0125,
+    "Hydrogen": 0.7131,
+    "Nitrogen": 0.2371,
+    "Argon": 0.0046,
+    "Ammonia": 0.0328
+   },
+   "w": {
+    "Methane": 0.0222,
+    "Hydrogen": 0.1593,
+    "Nitrogen": 0.7364,
+    "Argon": 0.0202,
+    "Ammonia": 0.0619
+   },
+   "phases": []
+  },
+  "AMMONIA-32": {
+   "stream": "AMMONIA-32",
+   "T_C": -15.0,
+   "P_bar": 150.0,
+   "mol_s": 0.62659,
+   "kg_s": 0.01063,
+   "x": {
+    "Methane": 0.0012,
+    "Water": 0.0069,
+    "Hydrogen": 0.0068,
+    "Nitrogen": 0.0014,
+    "Argon": 0.0008,
+    "Ammonia": 0.983
+   },
+   "w": {
+    "Methane": 0.0011,
+    "Water": 0.0073,
+    "Hydrogen": 0.0008,
+    "Nitrogen": 0.0023,
+    "Argon": 0.002,
+    "Ammonia": 0.9865
+   },
+   "phases": []
+  }
+ }
+}
