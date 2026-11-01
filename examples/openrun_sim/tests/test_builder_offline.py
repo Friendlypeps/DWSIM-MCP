@@ -152,6 +152,47 @@ class ColumnBuild(unittest.TestCase):
         self.assertTrue(b.run.stages[-1]["ok"]); self.assertIn("retried", b.run.stages[-1]["stage"])
         self.assertEqual(len(c.named("dwsim_column_create")), 1)
 
+    def test_failed_retry_goes_back_to_wang_henke(self):
+        fail1 = {"ok": False, "errors": ["S7-DISTILLATIO: Solver reached the maximum number of iterations without converging."], "objects": []}
+        fail2 = {"ok": False, "errors": ["S7-DISTILLATIO: DCErrorStillHigh"], "objects": []}
+        c = FakeClient(streams={"organic phase": state(0.636, ORGANIC)}, solve=[fail1, fail2])
+        b = builder_for(column_plant(), c)
+        b.run.units["S7"], b.run.unit_steps["S7-DISTILLATIO"] = "S7-DISTILLATIO", "S7"
+        b.columns["S7-DISTILLATIO"] = {"step_id": "S7", "type": "Distillation", "solver": WANG_HENKE, "source": "server default"}
+        with self.assertRaises(Refused) as cm:
+            build_column(b)
+        sets = [a["value"] for a in c.named("dwsim_object_set") if a.get("path") == "SolvingMethodName"]
+        self.assertEqual(sets, [NAPHTALI_SANDHOLM, WANG_HENKE])
+        self.assertEqual(b.columns["S7-DISTILLATIO"]["solver"], WANG_HENKE)
+        self.assertFalse(any("Naphtali" in a for a in b.run.assumptions))
+        self.assertTrue(any("did not converge either" in w for w in b.run.warnings))
+        self.assertIn("DCErrorStillHigh", cm.exception.reason); self.assertIn("solving_method", cm.exception.resolve)
+
+    def test_setup_error_does_not_trigger_the_solver_fallback(self):
+        fail = {"ok": False, "errors": ["S7-DISTILLATIO: One or more streams specified in the column connections window is missing. Please check input data and try again."], "objects": []}
+        c = FakeClient(streams={"organic phase": state(0.636, ORGANIC)}, solve=[fail, {"ok": True}])
+        b = builder_for(column_plant(), c)
+        b.run.units["S7"], b.run.unit_steps["S7-DISTILLATIO"] = "S7-DISTILLATIO", "S7"
+        b.columns["S7-DISTILLATIO"] = {"step_id": "S7", "type": "Distillation", "solver": WANG_HENKE, "source": "server default"}
+        with self.assertRaises(Refused) as cm:
+            build_column(b)
+        self.assertEqual([a for a in c.named("dwsim_object_set") if a.get("path") == "SolvingMethodName"], [])
+        self.assertEqual(len(c.named("dwsim_solve_run")), 1)
+        self.assertIn("set up wrong", cm.exception.resolve)
+
+    def test_timeout_is_named_in_the_refusal(self):
+        c = FakeClient(streams={"organic phase": state(0.636, ORGANIC)}, solve=[{"ok": False, "errors": ["The operation was canceled."], "objects": []}])
+        b = builder_for(column_plant(), c)
+        with self.assertRaises(Refused) as cm:
+            build_column(b)
+        self.assertIn("DWSIM_SOLVE_TIMEOUT", cm.exception.resolve); self.assertEqual(cm.exception.step_id, "S9")
+
+    def test_open_bounded_slot_counts_as_one_stated_value(self):
+        from openrun_sim.builder import _mid
+        self.assertEqual(_mid({"min_si": None, "max_si": 351.15}), 351.15)
+        self.assertIsNone(_mid({"min_si": None, "max_si": None})); self.assertIsNone(_mid(None))
+        self.assertAlmostEqual(_mid([343.15, 345.15]), 344.15)
+
     def test_person_chosen_solver_is_never_replaced(self):
         fail = {"ok": False, "errors": ["S7-DISTILLATIO: did not converge"], "objects": []}
         c = FakeClient(streams={"organic phase": state(0.636, ORGANIC)}, solve=[fail, {"ok": True}])
@@ -305,6 +346,15 @@ class Loops(unittest.TestCase):
         sc = c.named("dwsim_stream_set_conditions")[0]
         self.assertEqual(sc["name"], "acid return-R"); self.assertAlmostEqual(sc["molar_flow_mol_s"], 0.4); self.assertEqual(sc["temperature_K"], 390.0)
         self.assertEqual(c.named("dwsim_column_connect")[0]["feeds"], [{"stream": "acid return-R", "stage": 5}])
+
+    def test_tear_that_cannot_be_attached_is_left_open(self):
+        src = state(0.4, {"Acetic acid": 1.0})
+        c = FakeClient(streams={"acid return": src, "acid return-R": src}, fail={"dwsim_column_connect"})
+        b, e = self.loop_builder(c)
+        ok, why, wired = recycles._close_one(b, e, b.tear_targets["acid return"])
+        self.assertFalse(ok); self.assertFalse(wired); self.assertIn("could not be attached", why)
+        self.assertEqual(c.named("dwsim_solve_run"), [])
+        self.assertEqual([a["target"] for a in c.named("dwsim_object_delete")], ["RCY-acid return", "acid return-R"])
 
     def test_failed_closed_solve_names_the_unit(self):
         src = state(0.4, {"Acetic acid": 1.0})

@@ -132,6 +132,7 @@ def cmd_run(args):
     os.makedirs(out_dir, exist_ok=True)
     c = Client(args.url, verbose=args.verbose)
     run = Run(plant, client=c)
+    b = None
     try:
         run.resolved = resolve_all(plant, client=c, log=lambda m: run.log("  compound " + m))
         pre = Run(plant, log=lambda m: None); pre.resolved = run.resolved
@@ -173,6 +174,9 @@ def cmd_run(args):
         print("TOOL ERROR:", e, file=sys.stderr)
         _write_refusal(out_dir, run)
         return 3
+    finally:
+        if b is not None:
+            b._close_scratch()  # the flash flowsheet is not the plant; a refusal mid-build must not leave it on the server
 
 
 def cmd_sweep(args):

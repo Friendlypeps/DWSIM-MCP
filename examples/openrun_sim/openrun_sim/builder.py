@@ -21,6 +21,11 @@ _SOLVER_ALIASES = [("naphtali", NAPHTALI_SANDHOLM), ("simultaneous", NAPHTALI_SA
                    ("burningham", BURNINGHAM_OTTO), ("sum rates", BURNINGHAM_OTTO), ("ns", NAPHTALI_SANDHOLM), ("wh", WANG_HENKE), ("bo", BURNINGHAM_OTTO)]
 # units the feed of a column passes through on its way from a decanter without changing its composition
 _TRANSPARENT = {"splitter", "tank", "recycle", "pump", "heater", "cooler", "mixer"}
+# what the engine's column solvers say when they do not converge (RigorousColumnSolvers/*.vb, untranslated keys included);
+# a setup error (connections missing, stage not set, no feed port) is not one and no other solver would change it
+_CONVERGENCE = ("converg", "iteration", "stillhigh", "still high", "generalerror", "nan", "invalid mixture", "invalid temperature", "trivial solution",
+                "error functions", "bottoms rate", "initial estimate", "lle estimate", "flash")
+_TIMEOUT = ("cancel", "timeout", "timed out")
 
 VESSEL_PORTS = {"vapor": 0, "vapour": 0, "gas": 0, "top": 0, "vent": 0, "overhead": 0,
                 "liquid": 1, "organic": 1, "light": 1, "bottom": 1, "condensate": 1, "liquid1": 1, "oil": 1,
@@ -113,25 +118,36 @@ class Builder:
         return None
 
     def _column_fallback(self, stage, r):
+        """Wang-Henke columns that failed to converge are solved once more with Naphtali-Sandholm. When that solves, the switch is
+        reported as assumed; when it does not, the columns go back to Wang-Henke so a later stage (a loop reopened, a feed scaled)
+        starts from the solver that worked before, and the attempt is a warning."""
         run = self.run
         switched = []
         for tag, err in self._failed(r):
             col = self.columns.get(tag)
-            if not col or col["solver"] != WANG_HENKE or col["source"] == "person" or col.get("fallback_tried"):
+            if not col or col["solver"] != WANG_HENKE or col["source"] == "person" or col.get("fallback_tried") or not is_convergence_error(err):
                 continue
             col["fallback_tried"] = True
             if self.c.try_call("dwsim_object_set", flowsheet_id=run.fs, target=tag, path="SolvingMethodName", value=NAPHTALI_SANDHOLM) is None:
                 continue
-            col["solver"], col["source"] = NAPHTALI_SANDHOLM, "fallback: Wang-Henke did not converge"
-            switched.append(tag)
-            run.assume(f"step {col['step_id']}: column solver {NAPHTALI_SANDHOLM} (the bubble-point method did not converge: {err[:160]})")
-            run.value(col["step_id"], "column solver", NAPHTALI_SANDHOLM, col["source"])
+            switched.append((tag, col, err))
         if not switched:
             return r
         self.touch()
         r2 = mcp.solve(self.c, run.fs)
-        self._record(f"{stage}, retried with Naphtali-Sandholm on {', '.join(switched)}", r2)
+        self._record(f"{stage}, retried with Naphtali-Sandholm on {', '.join(t for t, _, _ in switched)}", r2)
         self.dirty = False
+        still = {t for t, _ in self._failed(r2)}
+        for tag, col, err in switched:
+            if tag in still or not r2.get("ok") and not still:
+                self.c.try_call("dwsim_object_set", flowsheet_id=run.fs, target=tag, path="SolvingMethodName", value=WANG_HENKE)
+                err2 = next((e for t, e in self._failed(r2) if t == tag), "the retry did not solve")
+                run.warn(f"step {col['step_id']}: {NAPHTALI_SANDHOLM} tried after Wang-Henke failed ({err[:120]}); it did not converge either "
+                         f"({err2[:120]}); Wang-Henke kept")
+                continue
+            col["solver"], col["source"] = NAPHTALI_SANDHOLM, "fallback: Wang-Henke did not converge"
+            run.assume(f"step {col['step_id']}: column solver {NAPHTALI_SANDHOLM} (the bubble-point method did not converge: {err[:160]})")
+            run.value(col["step_id"], "column solver", NAPHTALI_SANDHOLM, col["source"])
         return r2
 
     def _require_solved(self, r, node, tag):
@@ -144,9 +160,13 @@ class Builder:
             units = [(u.get("name"), u.get("error")) for u in d.get("unsolved", []) if u.get("error") and u["error"] != "Not calculated"]
         unit, err = units[0] if units else ("", str(r.get("errors") or "the solver reported no unit"))
         fstep = self._step_of(unit)
-        if unit in self.columns:
+        if any(k in str(r.get("errors") or "").lower() for k in _TIMEOUT):
+            resolve = "the solve timed out: raise DWSIM_SOLVE_TIMEOUT (seconds, default 300), or make the units before this column converge faster"
+        elif unit in self.columns and is_convergence_error(err):
             resolve = (f"overrides.column.{fstep}: solving_method ('{NAPHTALI_SANDHOLM}'), max_iterations, reboiler_spec, "
                        f"top_temperature_K / bottom_temperature_K (estimates), reflux_ratio")
+        elif unit in self.columns:
+            resolve = f"the column {unit} is set up wrong, not unconverged: check its feeds, products and stages (overrides.column.{fstep})"
         else:
             resolve = f"make step {fstep or '?'} ({unit or 'the failed unit'}) solve first: overrides.setpoints, overrides.units or overrides.column of that step"
         more = f"; {len(units) - 1} more unit(s) failed" if len(units) > 1 else ""
@@ -559,10 +579,10 @@ class Builder:
         step, run, c, fs = node.step, self.run, self.c, self.run.fs
         tt = o.get("top_temperature_K") or step.slots.get("top_temperature")
         bt = o.get("bottom_temperature_K") or step.slots.get("bottom_temperature")
-        if not tt and not bt:
+        t0, t1 = _mid(tt), _mid(bt)
+        tt, bt = (tt if t0 is not None else None), (bt if t1 is not None else None)
+        if t0 is None and t1 is None:
             return
-        t0 = _mid(tt) if tt else None
-        t1 = _mid(bt) if bt else None
         how = None
         if t0 is None:
             t0, how = self._end_estimate(node, feeds, p, "top", dist)
@@ -1030,11 +1050,19 @@ class Builder:
 
 
 def _mid(v):
+    """The midpoint of a slot range; an open side falls back to the stated side; None when nothing is stated."""
     if isinstance(v, dict):
-        return 0.5 * (v["min_si"] + v["max_si"])
+        v = (v.get("min_si"), v.get("max_si"))
     if isinstance(v, (list, tuple)):
-        return 0.5 * (v[0] + v[1])
-    return float(v)
+        given = [float(x) for x in v if isinstance(x, (int, float))]
+        return sum(given) / len(given) if given else None
+    return float(v) if isinstance(v, (int, float)) else None
+
+
+def is_convergence_error(message):
+    """True for an engine message that says a unit did not converge (as against a wiring or specification mistake)."""
+    t = str(message or "").lower().replace(" ", "")
+    return any(k.replace(" ", "") in t for k in _CONVERGENCE)
 
 
 def solver_name(text, step_id=None):

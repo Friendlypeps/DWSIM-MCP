@@ -8,6 +8,7 @@ with 'one or more streams specified in the column connections window is missing'
 source holds no solved state is never closed (the Recycle would hand the loop a NaN composition).
 """
 from .compounds import PERMANENT_GASES
+from .mcp import ToolError
 from .reactions import DEFAULTS
 
 
@@ -72,12 +73,17 @@ def _close_one(builder, e, tgt):
     if not _usable(c.try_call("dwsim_stream_get_results", flowsheet_id=fs, name=out)):
         _unwire(builder, e, None)
         return False, f"the seeded tear stream {out} reads back with no flow or a NaN composition; the loop is not closed", False
-    if tgt["kind"] == "mixer":
-        c.call("dwsim_unitop_connect", flowsheet_id=fs, unitop=tgt["unit"], feed_stream=out, feed_port=tgt["port"])
-    elif tgt["kind"] == "column_feed":
-        c.call("dwsim_column_connect", flowsheet_id=fs, name=tgt["unit"], feeds=[{"stream": out, "stage": tgt["stage"]}])
-    else:
-        c.call("dwsim_unitop_connect", flowsheet_id=fs, unitop=tgt["unit"], feed_stream=out, feed_port=tgt.get("port", 0))
+    try:
+        if tgt["kind"] == "mixer":
+            c.call("dwsim_unitop_connect", flowsheet_id=fs, unitop=tgt["unit"], feed_stream=out, feed_port=tgt["port"])
+        elif tgt["kind"] == "column_feed":
+            c.call("dwsim_column_connect", flowsheet_id=fs, name=tgt["unit"], feeds=[{"stream": out, "stage": tgt["stage"]}])
+        else:
+            c.call("dwsim_unitop_connect", flowsheet_id=fs, unitop=tgt["unit"], feed_stream=out, feed_port=tgt.get("port", 0))
+    except ToolError as ex:
+        # a port already taken or no free feed on the column: the loop stays open with the engine's reason, the run goes on
+        _unwire(builder, e, tgt)
+        return False, f"the tear stream could not be attached to {tgt['unit']} ({tgt['kind']}): {str(ex)[:240]}", False
     c.call("dwsim_recycle_configure", flowsheet_id=fs, name=rcy, max_iterations=DEFAULTS["recycle_max_iterations"])
     builder.touch()
     r = builder.solve(f"loop {e.stream} closed")
