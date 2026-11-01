@@ -79,7 +79,7 @@ name), `units` (free `dwsim_unitop_set` properties, `OutletVaporFraction`, `hot_
 | sample | gold result (`gold_plants/RESULTS.md`) | this builder |
 |---|---|---|
 | ammonia_haber_bosch_llm_opus | secondary reformer 950 °C, converter outlet 23 % NH3, loop closed, product −33 °C | 950 °C, 23.1 % NH3, loop closed, −36 °C at 1.1 bar; feeds scaled to 1000 kg/h; 0 check errors; balance closed |
-| etoac_fischer_llm_opus | column head 70.7 °C, acid recycle closed, three loops open | see `samples/expected/` after a run |
+| etoac_fischer_llm_opus | column head 70.7 °C, drying column bottom 78.4 °C, wastewater 101.3 °C, acid recycle closed, three loops open | 70.7 / 78.1 / 101.3 °C, acid loop closed early with its column (`loops.close_early`), three loops open and quantified (156 + 97 + 26 kg/h leave through them), product 50 kg/h of the 300 asked at 85 wt% ester: the builder refuses to scale feeds six-fold into open loops and reports achieved / asked |
 
 ## Known limits
 

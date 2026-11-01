@@ -215,6 +215,12 @@ class Builder:
         step, run, plant = node.step, self.run, self.run.plant
         rs, rtype, phase, model = self.reaction_sets[step.step_id]
         feed = self._single_feed(node, tag)
+        p, psrc = setpoint(plant, step, "pressure", required=False)
+        if p is not None:
+            # a reactor takes its pressure from the feed; a valve in front puts it at the stated pressure (gold: DeltaP 0.1 bar)
+            mcp.unit(self.c, run.fs, "Valve", tag + "-V", feed=feed, product=f"{step.step_id}.pv", mode="OutletPressure", props={"OutletPressure": p})
+            run.value(step.step_id, "reactor pressure Pa (valve in front)", round(p), psrc)
+            feed = f"{step.step_id}.pv"
         t, src = setpoint(plant, step, "temperature", required=False)
         props = {"ReactionSetID": rs}
         props.update(self._props_override(step))

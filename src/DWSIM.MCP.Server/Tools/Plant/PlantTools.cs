@@ -232,7 +232,7 @@ namespace DWSIM.MCPServer.Tools.Plant
         [McpTool("dwsim_plant_balance",
             "Mass, compound and element balance over the plant boundary of a solved flowsheet: feeds are material " +
             "streams no unit produces, products are streams no unit takes. Compounds that take part in a reaction " +
-            "are marked, so the element rows are the hard check. open_loops = [{out, in}] names tear pairs (in may be omitted when nothing re-enters; a " +
+            "are marked, so the element rows are the hard check. open_loops = [{out, in}] names tear pairs (in may be omitted when nothing re-enters; both stay in the plant sums; a " +
             "product that would feed a recycle inlet) that are netted out and reported as the mismatch of a loop " +
             "left open. Energy in/out of boundary energy streams is reported as information.")]
         public JObject Balance(
@@ -255,7 +255,8 @@ namespace DWSIM.MCPServer.Tools.Plant
                     var inTag = t.Value<string>("in");
                     var i = string.IsNullOrWhiteSpace(inTag) ? null : Find.As<IMaterialStream>(fs, inTag, "open-loop inlet stream");
                     loopPairs.Add((o, i));
-                    products.Remove(o); if (i != null) feeds.Remove(i);
+                    // the tear streams stay in the plant sums: what leaves through an open loop does leave the plant, so the
+                    // closure below is the physical balance; the pair's own mismatch is listed in open_loop_mismatch
                 }
             }
 
