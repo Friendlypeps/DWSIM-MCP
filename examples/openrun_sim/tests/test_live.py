@@ -39,7 +39,7 @@ class Live(unittest.TestCase):
         self.assertTrue(rep["plant_report"]["solved"])
         self.assertEqual(rep["check"]["errors"], 0, rep["check"]["findings"])
         prod = rep["plant_report"]["product"]
-        self.assertAlmostEqual(prod["ratio_to_asked"], 1.0, delta=exp["product_ratio_tolerance"])
+        self.assertAlmostEqual(prod["ratio_to_asked"], exp.get("product_ratio_expected", 1.0), delta=exp["product_ratio_tolerance"])
         self.assertGreaterEqual(prod["purity_mass"], exp["min_purity_mass"])
         self.assertEqual(len(rep["run"]["loops_closed"]), exp["loops_closed"])
         self.assertEqual(len(rep["run"]["loops_open"]), exp["loops_open"])

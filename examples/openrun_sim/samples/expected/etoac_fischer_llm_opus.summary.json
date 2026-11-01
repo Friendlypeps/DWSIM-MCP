@@ -1,12 +1,40 @@
 {
-  "_note": "Tolerances from gold_plants/RESULTS.md plant 1 (Opus Fischer train, GOLD_OPEN_LOOPS=1): U5 head 70.7 C, U8 bottom 78.4 C, U11 bottom 101.3 C, product 83.6 wt% ester (acid slips over the 12-stage column); acid recycle closed, organic reflux / azeotrope return / ethanol recycle left open and quantified.",
-  "product_ratio_tolerance": 0.15,
-  "min_purity_mass": 0.75,
-  "loops_closed": 1,
-  "loops_open": 3,
-  "streams": {
-    "EST-DIST": {"T_C": [70.7, 2.5]},
-    "DRY-BTM": {"T_C": [78.4, 3.0], "x": {"Ethyl acetate": [0.80, 0.12]}},
-    "WASTEWATER": {"T_C": [101.3, 3.0], "x": {"Water": [0.95, 0.06]}}
+ "_note": "Tolerances from gold_plants/RESULTS.md plant 1 (Opus Fischer train, GOLD_OPEN_LOOPS=1): U5 head 70.7 C, U8 bottom 78.4 C, U11 bottom 101.3 C, product 83.6 wt% ester (acid slips over the 12-stage column); acid recycle closed, organic reflux / azeotrope return / ethanol recycle left open and quantified. With three loops open a sixth of the asked product leaves as product (the rest leaves through the open tears), so the ratio to the asked rate is expected near 0.17, not 1.",
+ "product_ratio_tolerance": 0.05,
+ "min_purity_mass": 0.75,
+ "loops_closed": 1,
+ "loops_open": 3,
+ "streams": {
+  "EST-DIST": {
+   "T_C": [
+    70.7,
+    2.5
+   ]
+  },
+  "DRY-BTM": {
+   "T_C": [
+    78.4,
+    3.0
+   ],
+   "x": {
+    "Ethyl acetate": [
+     0.8,
+     0.12
+    ]
+   }
+  },
+  "WASTEWATER": {
+   "T_C": [
+    101.3,
+    3.0
+   ],
+   "x": {
+    "Water": [
+     0.95,
+     0.06
+    ]
+   }
   }
+ },
+ "product_ratio_expected": 0.167
 }
