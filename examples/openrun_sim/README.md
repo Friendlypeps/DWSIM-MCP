@@ -81,6 +81,12 @@ name), `units` (free `dwsim_unitop_set` properties, `OutletVaporFraction`, `hot_
 | ammonia_haber_bosch_llm_opus | secondary reformer 950 °C, converter outlet 23 % NH3, loop closed, product −33 °C | 950 °C, 23.1 % NH3, loop closed, −36 °C at 1.1 bar; feeds scaled to 1000 kg/h; 0 check errors; balance closed |
 | etoac_fischer_llm_opus | column head 70.7 °C, drying column bottom 78.4 °C, wastewater 101.3 °C, acid recycle closed, three loops open | 70.7 / 78.1 / 101.3 °C, acid loop closed early with its column (`loops.close_early`), three loops open and quantified (156 + 97 + 26 kg/h leave through them), product 50 kg/h of the 300 asked at 85 wt% ester: the builder refuses to scale feeds six-fold into open loops and reports achieved / asked |
 
+Live tests (`OPENRUN_LIVE=1 python3 -m unittest tests.test_live`) run both samples and the refusal sample against
+these expectations (`samples/expected/*.summary.json`): Haber-Bosch solved with the loop closed, the target met and
+the balance closed; Fischer solved with the acid loop closed, three loops open and quantified, balance closed, no
+check errors (two column bottoms miss the document's windows by 0.1 and 0.3 K and are reported as near misses);
+the refusal sample refused with the ambiguous formula, the open bound and the unmapped concept named.
+
 ## Known limits
 
 InChIKey cannot be matched in the engine (no InChI in the 10.2 databanks). Solids stay refused. Reactive
