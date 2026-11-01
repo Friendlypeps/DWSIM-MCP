@@ -690,7 +690,10 @@ class Builder:
             ratio = asked / got
             if abs(ratio - 1) < 0.005:
                 break
-            lo, hi = plant.options.get("scale_range", [0.5, 2.0])
+            # a plant whose loops are all closed scales almost linearly, so a wide ratio is safe; with loops left open the
+            # open-loop product is no measure of the plant and only a modest correction is applied
+            all_closed = not run.loops_open and (label != "open loop" or not any(e.tear for e in self.topo.tears()))
+            lo, hi = plant.options.get("scale_range", [0.1, 10.0] if all_closed else [0.5, 2.0])
             if not lo <= ratio <= hi:
                 run.warn(f"product {got * 3600:.4g} kg/h vs asked {asked * 3600:.4g} kg/h ({label}): the ratio {ratio:.3g} is outside "
                          f"[{lo}, {hi}], so the feeds are not scaled (a plant with loops left open loses product through them; absolute "

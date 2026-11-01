@@ -349,6 +349,7 @@ namespace DWSIM.MCPServer.Tools.Plant
             ["REACTOR_PHASE_MISMATCH"] = "The reaction is defined in a phase the reactor outlet does not hold; the engine computes with the overall composition and does not notice.",
             ["DECANTER_ONE_LIQUID"] = "A vessel with two liquid outlets whose feed has one liquid phase: check the flash (VLLE) and the binary parameters.",
             ["WINDOW_VIOLATION"] = "The quantity is outside the window the unit was selected for (module window or document requirement).",
+            ["WINDOW_NEAR"] = "The quantity misses its window by less than the engine's resolution (1 K, or 2 % of a pressure; near_si overrides).",
             ["WINDOW_OK"] = "The quantity is inside its window.",
             ["UNIT_NOT_CONVERGED"] = "The unit did not finish its calculation; everything downstream is a casualty.",
             ["RECYCLE_NOT_CONVERGED"] = "The tear stream did not settle; the loop's values are not a steady state.",
@@ -444,10 +445,16 @@ namespace DWSIM.MCPServer.Tools.Plant
                     double? max = w["max_si"]?.Type == JTokenType.Null ? null : w["max_si"]?.Value<double?>();
                     var obj = Find.ByTagOrId(fs, objTag, "object");
                     double value = WindowValue(f, fs, obj, q, w.Value<string>("stream"));
-                    bool outside = (min.HasValue && value < min.Value - 1e-9) || (max.HasValue && value > max.Value + 1e-9);
+                    double miss = Math.Max(min.HasValue ? min.Value - value : 0, max.HasValue ? value - max.Value : 0);
+                    bool outside = miss > 1e-9;
+                    // a miss inside the engine's own resolution (1 K, or 2 % of a pressure) is a warning, not an error: the
+                    // column bottom at 78.1 C against a document window of 77-78 C is a reading to report, not a wrong plant
+                    double near = w["near_si"]?.Value<double?>() ?? (q.Contains("pressure") ? 0.02 * Math.Abs(value) : 1.0);
+                    bool nearMiss = outside && miss <= near;
                     var window = $"[{(min.HasValue ? min.Value.ToString("0.###") : "open")}, {(max.HasValue ? max.Value.ToString("0.###") : "open")}]";
-                    findings.Add(F(outside ? "WINDOW_VIOLATION" : "WINDOW_OK", outside ? "error" : "info", objTag,
-                        $"{q} = {value:0.###} SI, window {window}", outside ? "Move the setpoint inside the window or choose another module." : ""));
+                    findings.Add(F(!outside ? "WINDOW_OK" : nearMiss ? "WINDOW_NEAR" : "WINDOW_VIOLATION", !outside ? "info" : nearMiss ? "warning" : "error", objTag,
+                        $"{q} = {value:0.###} SI, window {window}" + (outside ? $", miss {miss:0.###}" : ""),
+                        !outside ? "" : nearMiss ? "Inside the engine's resolution of the window; state it in the report." : "Move the setpoint inside the window or choose another module."));
                 }
             }
 
