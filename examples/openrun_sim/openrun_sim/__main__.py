@@ -175,6 +175,32 @@ def cmd_run(args):
         return 3
 
 
+def cmd_sweep(args):
+    """Operating-range sweep on a flowsheet an earlier run left on the server (its report.json gives the handle and tags)."""
+    from .sweep import operating_range
+    plant = load_plant(args.plant, args.overrides)
+    with open(args.report, encoding="utf-8") as f:
+        rep = json.load(f)
+    c = Client(args.url, verbose=args.verbose)
+    run = Run(plant, client=c)
+    run.fs = rep["run"]["flowsheet_id"]
+    run.units = rep["run"]["units"]
+    run.product_stream = rep["run"]["product_stream"]
+    c.call("dwsim_flowsheet_summary", flowsheet_id=run.fs)  # the handle must still be alive
+
+    class _B:  # what operating_range reads from a builder
+        pass
+    b = _B(); b.run, b.c = run, c
+    data = operating_range(b)
+    out = os.path.join(os.path.dirname(args.report), "operating_range.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=1, default=str)
+    for r in data:
+        print(f"{r['step_id']} {r['quantity']}: window {r.get('window')} solved {r.get('solved_points')}/{r.get('total_points')} -> solved range {r.get('solved_range')}")
+    print("operating range:", out)
+    return 0
+
+
 def _write_refusal(out_dir, run):
     with open(os.path.join(out_dir, "report.json"), "w", encoding="utf-8") as f:
         json.dump({"run": run.summary()}, f, indent=1, default=str)
@@ -191,10 +217,13 @@ def main(argv=None):
     v.add_argument("plant", nargs="+"); v.add_argument("--overrides")
     m = sub.add_parser("map", help="offline mapping as JSON")
     m.add_argument("plant", nargs="+"); m.add_argument("--overrides")
+    sw = sub.add_parser("sweep", help="operating-range sweep on the flowsheet of an earlier run (still on the server)")
+    sw.add_argument("plant"); sw.add_argument("--overrides"); sw.add_argument("--report", required=True); sw.add_argument("--url")
+    sw.add_argument("-q", "--quiet", dest="verbose", action="store_false")
     e = sub.add_parser("explain-concepts", help="the 58 concepts and what the builder makes of each")
     e.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
-    return {"run": cmd_run, "validate": cmd_validate, "map": cmd_map, "explain-concepts": cmd_explain}[a.cmd](a) or 0
+    return {"run": cmd_run, "validate": cmd_validate, "map": cmd_map, "sweep": cmd_sweep, "explain-concepts": cmd_explain}[a.cmd](a) or 0
 
 
 if __name__ == "__main__":

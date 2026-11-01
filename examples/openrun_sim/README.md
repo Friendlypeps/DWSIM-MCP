@@ -71,6 +71,11 @@ name), `units` (free `dwsim_unitop_set` properties, `OutletVaporFraction`, `hot_
   close, the derived feeds are scaled so the product meets the target.
 - **Loops** (`recycles.py`): open-loop first; each tear seeded with `dwsim_recycle_seed`; closed one at a
   time (gas loops first); a loop that does not converge is reopened and reported with what leaves the plant.
+- **Operating range** (`sweep.py`, `--sweep` or `python3 -m openrun_sim sweep ... --report out/<plant>/report.json`
+  on a flowsheet still on the server): the reaction steps' closed windows (`options.sweep_steps` for others) are swept
+  with `dwsim_study_sweep`, three points each from the midpoint outwards, every point a full plant solve with the loops
+  closed (`options.sweep_timeout_s`, default 300 s); `operating_range.json` lists each point as solved or not with
+  the engine's error, and the solved sub-range.
 - **Report** (`report.py`): `dwsim_plant_report` + `dwsim_plant_balance` (open loops quantified) +
   `dwsim_plant_check` (windows), plus assumptions, placeholders, stand-ins and provenance.
 
