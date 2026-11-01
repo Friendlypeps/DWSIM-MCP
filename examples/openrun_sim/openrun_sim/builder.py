@@ -684,9 +684,13 @@ class Builder:
             ratio = asked / got
             if abs(ratio - 1) < 0.005:
                 break
-            if not 0.05 < ratio < 20:
-                run.warn(f"product {got * 3600:.4g} kg/h vs asked {asked * 3600:.4g} kg/h: ratio {ratio:.3g} is outside the range the builder scales; feeds left as derived")
+            lo, hi = plant.options.get("scale_range", [0.5, 2.0])
+            if not lo <= ratio <= hi:
+                run.warn(f"product {got * 3600:.4g} kg/h vs asked {asked * 3600:.4g} kg/h ({label}): the ratio {ratio:.3g} is outside "
+                         f"[{lo}, {hi}], so the feeds are not scaled (a plant with loops left open loses product through them; absolute "
+                         f"column draws would not follow a large scale change). The report states achieved / asked.")
                 return
+            before = {f["stream"]: f["mol_s"] for f in run.feeds}
             for f in derived:
                 f["mol_s"] *= ratio
                 f["source"] += f"; scaled x{ratio:.4g} to meet the target (pass {it + 1})"
@@ -702,7 +706,18 @@ class Builder:
             self.touch()
             r = self.solve(f"feeds scaled x{ratio:.4g} to the target ({label})")
             if not r.get("ok"):
-                run.warn(f"solve failed after scaling the feeds x{ratio:.4g} ({label}); feeds left at the scaled value")
+                for f in run.feeds:
+                    if f["mol_s"] != before[f["stream"]]:
+                        f["mol_s"] = before[f["stream"]]
+                        f["source"] = f["source"].split("; scaled x")[0]
+                        c.try_call("dwsim_stream_set_conditions", flowsheet_id=run.fs, name=f["stream"], molar_flow_mol_s=f["mol_s"])
+                for lp in run.loops_closed:
+                    rs = c.try_call("dwsim_stream_get_results", flowsheet_id=run.fs, name=lp["stream"] + "-R")
+                    if rs and rs.get("molar_flow_mol_s", 0) > 0:
+                        c.try_call("dwsim_stream_set_conditions", flowsheet_id=run.fs, name=lp["stream"] + "-R", molar_flow_mol_s=rs["molar_flow_mol_s"] / ratio)
+                self.touch()
+                self.solve(f"feeds restored after the scaled solve failed ({label})")
+                run.warn(f"solve failed after scaling the feeds x{ratio:.4g} ({label}); feeds restored to the previous values")
                 return
         run.note("target", f"derived feeds scaled so that the product rate meets {asked * 3600:.4g} kg/h ({label})")
 
