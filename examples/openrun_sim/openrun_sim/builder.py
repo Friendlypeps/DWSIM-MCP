@@ -5,13 +5,22 @@ Recipes (concepts.py): heater, cooler, reactor, column, absorber, stripper, vess
 compsep, hx, mixer, pump, compressor, tank, recycle. Every number that is not stated is assumed and reported.
 """
 import json
+import math
 
 from . import mcp
-from .compounds import PERMANENT_GASES, apply_basis
+from .compounds import NBP_OFFLINE, PERMANENT_GASES, apply_basis
 from .errors import Refused
 from .feeds import apply_ratios, feed_specs
 from .reactions import DEFAULTS, create_reactions, model_for, phase_for, reactor_type_for
 from .setpoints import check_windows, setpoint, windows_for
+
+WANG_HENKE = "Wang-Henke (Bubble Point)"
+NAPHTALI_SANDHOLM = "Naphtali-Sandholm (Simultaneous Correction)"
+BURNINGHAM_OTTO = "Burningham-Otto (Sum Rates)"
+_SOLVER_ALIASES = [("naphtali", NAPHTALI_SANDHOLM), ("simultaneous", NAPHTALI_SANDHOLM), ("wang", WANG_HENKE), ("bubble", WANG_HENKE),
+                   ("burningham", BURNINGHAM_OTTO), ("sum rates", BURNINGHAM_OTTO), ("ns", NAPHTALI_SANDHOLM), ("wh", WANG_HENKE), ("bo", BURNINGHAM_OTTO)]
+# units the feed of a column passes through on its way from a decanter without changing its composition
+_TRANSPARENT = {"splitter", "tank", "recycle", "pump", "heater", "cooler", "mixer"}
 
 VESSEL_PORTS = {"vapor": 0, "vapour": 0, "gas": 0, "top": 0, "vent": 0, "overhead": 0,
                 "liquid": 1, "organic": 1, "light": 1, "bottom": 1, "condensate": 1, "liquid1": 1, "oil": 1,
@@ -31,6 +40,11 @@ class Builder:
         self.reaction_sets = {}
         self.tear_targets = {}       # tear stream -> {unit, kind, port|stage}
         self.deferred_hx = {}        # tear stream (hot inlet of a WasteHeatRecovery step) -> hx info
+        self.columns = {}            # rigorous column tag -> {step_id, type, solver, source}
+        self.nbp = {}                # databank name -> normal boiling point K (None when unknown)
+        self.needs_lle = False
+        self._scratch = None         # a second flowsheet for the bubble / dew point flashes (False once it failed)
+        self._scratch_n = 0
         self.solved_once = False
         self.dirty = True
 
@@ -39,26 +53,106 @@ class Builder:
         run, c, plant = self.run, self.c, self.run.plant
         run.fs = c.call("dwsim_flowsheet_create", name=plant.plant_id)["flowsheet_id"]
         fs = run.fs
-        needs_lle = any(n.entry and n.entry.recipe == "vessel_lle" for n in self.topo.nodes.values())
-        apply_basis(c, fs, run, run.resolved.names(), needs_lle)
+        self.needs_lle = any(n.entry and n.entry.recipe == "vessel_lle" for n in self.topo.nodes.values())
+        apply_basis(c, fs, run, run.resolved.names(), self.needs_lle)
         for n in self.topo.ordered():
             if n.entry and n.entry.recipe == "reactor" or (n.entry and n.entry.concept == "ReactiveDistillation"):
                 self._reactions(n)
         self._feeds()
         for n in self.topo.ordered():
             self._node(n)
-        self.solve("open loop, all units")
+        r = self.solve("open loop, all units")
+        if not r.get("ok"):
+            unit, err = (self._failed(r) or [("?", str(r.get("errors") or "solve failed"))])[0]
+            run.warn(f"the open-loop flowsheet did not solve: {unit} failed with '{err[:200]}' (step {self._step_of(unit) or '?'}); the report shows the partial state")
+        self._close_scratch()
         self._product()
         self._scale_to_target()
         return run
 
     def solve(self, stage):
+        """One solve of the plant flowsheet. A Wang-Henke column that did not converge is switched to Naphtali-Sandholm
+        once and the stage solved again (reported as assumed); a solver a person chose is never replaced."""
         if not self.dirty:
             return self.run.stages[-1]["result"]
         r = mcp.solve(self.c, self.run.fs)
-        self.run.stages.append({"stage": stage, "ok": bool(r.get("ok")), "errors": r.get("errors"), "result": {k: v for k, v in r.items() if k != "objects"}})
+        self._record(stage, r)
         self.solved_once, self.dirty = True, False
+        if not r.get("ok"):
+            r = self._column_fallback(stage, r)
         return r
+
+    def _record(self, stage, r):
+        self.run.stages.append({"stage": stage, "ok": bool(r.get("ok")), "errors": r.get("errors"), "failed": self._failed(r)[:8],
+                                "result": {k: v for k, v in r.items() if k != "objects"}})
+
+    @staticmethod
+    def _failed(r):
+        """[(unit tag, error)] of a solve result, in the order the solver reported them."""
+        out = []
+        for e in r.get("errors") or []:
+            tag, sep, msg = str(e).partition(": ")
+            out.append((tag if sep else "", msg if sep else str(e)))
+        if not any(t for t, _ in out):
+            out = [(o.get("name") or "", str(o["error"])) for o in (r.get("objects") or []) if o.get("error")] or out
+        return out
+
+    def _step_of(self, tag):
+        """The step a unit tag belongs to: the main unit, a sub-unit of it (valve, cooler, mixer, knock-out), or none."""
+        if not tag:
+            return None
+        if tag in self.run.unit_steps:
+            return self.run.unit_steps[tag]
+        for sid, u in self.run.units.items():
+            if tag.startswith(u) or tag.endswith(u):
+                return sid
+        ids = {s.step_id for s in self.run.plant.process_steps}
+        for token in tag.replace(".", "-").split("-"):
+            if token in ids:
+                return token
+        return None
+
+    def _column_fallback(self, stage, r):
+        run = self.run
+        switched = []
+        for tag, err in self._failed(r):
+            col = self.columns.get(tag)
+            if not col or col["solver"] != WANG_HENKE or col["source"] == "person" or col.get("fallback_tried"):
+                continue
+            col["fallback_tried"] = True
+            if self.c.try_call("dwsim_object_set", flowsheet_id=run.fs, target=tag, path="SolvingMethodName", value=NAPHTALI_SANDHOLM) is None:
+                continue
+            col["solver"], col["source"] = NAPHTALI_SANDHOLM, "fallback: Wang-Henke did not converge"
+            switched.append(tag)
+            run.assume(f"step {col['step_id']}: column solver {NAPHTALI_SANDHOLM} (the bubble-point method did not converge: {err[:160]})")
+            run.value(col["step_id"], "column solver", NAPHTALI_SANDHOLM, col["source"])
+        if not switched:
+            return r
+        self.touch()
+        r2 = mcp.solve(self.c, run.fs)
+        self._record(f"{stage}, retried with Naphtali-Sandholm on {', '.join(switched)}", r2)
+        self.dirty = False
+        return r2
+
+    def _require_solved(self, r, node, tag):
+        """Refuse to build a column on an unsolved feed: name the first unit that failed and what resolves it."""
+        if r.get("ok"):
+            return
+        units = [(t, e) for t, e in self._failed(r) if t]
+        if not units:
+            d = self.c.try_call("dwsim_solve_diagnostics", flowsheet_id=self.run.fs) or {}
+            units = [(u.get("name"), u.get("error")) for u in d.get("unsolved", []) if u.get("error") and u["error"] != "Not calculated"]
+        unit, err = units[0] if units else ("", str(r.get("errors") or "the solver reported no unit"))
+        fstep = self._step_of(unit)
+        if unit in self.columns:
+            resolve = (f"overrides.column.{fstep}: solving_method ('{NAPHTALI_SANDHOLM}'), max_iterations, reboiler_spec, "
+                       f"top_temperature_K / bottom_temperature_K (estimates), reflux_ratio")
+        else:
+            resolve = f"make step {fstep or '?'} ({unit or 'the failed unit'}) solve first: overrides.setpoints, overrides.units or overrides.column of that step"
+        more = f"; {len(units) - 1} more unit(s) failed" if len(units) > 1 else ""
+        raise Refused(f"the flowsheet does not solve before column {tag} (step {node.step.step_id}): {unit or 'a unit'} failed with "
+                      f"'{err[:300]}'{more}; the column's feed is unsolved, so no specification can be derived from it",
+                      step_id=fstep or node.step.step_id, concept=node.entry.concept, what=unit or None, resolve=resolve)
 
     def touch(self):
         self.dirty = True
@@ -285,7 +379,11 @@ class Builder:
             rr = DEFAULTS["column_reflux_ratio"]; run.assume(f"step {step.step_id}: reflux ratio {rr} (not stated)")
         dp = o.get("pressure_drop_Pa", DEFAULTS["column_pressure_drop_Pa"])
         cond = o.get("condenser_type", "Total_Condenser")
-        self.solve(f"before column {tag}")
+        solver, ssrc = self._column_solver(node, o)
+        max_it = int(o["max_iterations"]) if o.get("max_iterations") else None
+        # the column is specified from its solved feed: a flowsheet that does not solve up to here is refused now,
+        # naming the unit at fault, instead of a later tool error on a spec derived from an uncalculated stream
+        self._require_solved(self.solve(f"before column {tag}"), node, tag)
         feeds = []
         for e in live:
             s = feed_override or run.actual(e.stream)
@@ -293,6 +391,9 @@ class Builder:
             feeds.append({"stream": s, "stage": stage})
         for e in tears:
             self.tear_targets[e.stream] = {"unit": tag, "kind": "column_feed", "stage": 1 if e.to_port.lower() in ("reflux", "top") else fstage, "step_id": step.step_id}
+        # the specifications and estimates are derived from the solved feeds as they are now; a knock-out liquid created
+        # below is not calculated until the next solve, and the permanent gas it removes is in no column spec anyway
+        spec_feeds = [dict(f) for f in feeds]
         # permanent gas in a total-condenser feed: knock it out first (gold finding 3)
         if cond == "Total_Condenser" and feeds:
             r = c.try_call("dwsim_stream_get_results", flowsheet_id=fs, name=feeds[0]["stream"])
@@ -314,7 +415,12 @@ class Builder:
             run.assume(f"step {step.step_id}: outlet ports not named; {dist} taken as the distillate" + (f", {btm} as the bottoms" if btm else ""))
         dist = dist or f"{step.step_id}.distillate"
         btm = btm or f"{step.step_id}.bottoms"
-        c.call("dwsim_column_create", flowsheet_id=fs, name=tag, type="Distillation", stages=n, condenser_type=cond, top_pressure_Pa=p, pressure_drop_Pa=dp)
+        create = {"flowsheet_id": fs, "name": tag, "type": "Distillation", "stages": n, "condenser_type": cond, "top_pressure_Pa": p,
+                  "pressure_drop_Pa": dp, "solving_method": solver}
+        if max_it:
+            create["max_iterations"] = max_it
+        c.call("dwsim_column_create", **create)
+        self.columns[tag] = {"step_id": step.step_id, "type": "Distillation", "solver": solver, "source": ssrc}
         for s in (dist, btm):
             c.try_call("dwsim_stream_add_material", flowsheet_id=fs, name=s)
         for s in (f"QC-{tag}", f"QR-{tag}"):
@@ -332,46 +438,232 @@ class Builder:
             # bottoms draw = fraction x flow of one feed component (e.g. 95 % of the water), from the solved feed
             comp = run.resolved.name(reb["compound"]) if reb["compound"] in run.resolved else reb["compound"]
             flow = 0.0
-            for f in feeds:
-                r = c.call("dwsim_stream_get_results", flowsheet_id=fs, name=f["stream"])
+            for f in spec_feeds:
+                r = self._feed_state(f["stream"], node)
                 flow += r["molar_flow_mol_s"] * r["phases"][0]["compounds"].get(comp, {}).get("mole_fraction", 0)
-            reb = {"type": "Product_Molar_Flow_Rate", "value": float(reb["fraction"]) * flow, "units": "mol/s"}
+            value = float(reb["fraction"]) * flow
+            if not value > 0:
+                raise Refused(f"reboiler_spec {reb['fraction']} of the feed {comp} gives a bottoms draw of {value:.4g} mol/s: the solved feed "
+                              f"({', '.join(f['stream'] for f in spec_feeds)}) carries no {comp}", step_id=step.step_id, concept=node.entry.concept, what=comp,
+                              resolve="name a compound the feed carries, or give reboiler_spec as {type: Product_Molar_Flow_Rate, value, units: mol/s}")
+            reb = {"type": "Product_Molar_Flow_Rate", "value": value, "units": "mol/s"}
             run.value(step.step_id, "bottoms draw mol/s", round(reb["value"], 5), f"person: {o['reboiler_spec']['fraction']} of the feed {comp}")
         if not reb:
-            reb = self._bottoms_spec(node, feeds, dist, btm)
+            reb = self._bottoms_spec(node, spec_feeds, dist, btm)
         c.call("dwsim_column_set_specs", flowsheet_id=fs, name=tag, condenser={"type": "Reflux Ratio", "value": float(rr)}, reboiler=reb)
-        tt, bt = step.slots.get("top_temperature"), step.slots.get("bottom_temperature")
-        if tt or bt:
-            # a linear temperature profile seeds the bubble-point solver (gold Fischer: 71 -> 118 C); with one end stated the
-            # other is taken 40 K away and reported as assumed
-            t0 = _mid(tt) if tt else _mid(bt) - 40.0
-            t1 = _mid(bt) if bt else _mid(tt) + 40.0
-            if not (tt and bt):
-                run.assume(f"step {step.step_id}: column temperature estimates {t0 - 273.15:.0f} -> {t1 - 273.15:.0f} C from the one stated end (the other taken 40 K away)")
-            c.call("dwsim_column_set_estimates", flowsheet_id=fs, name=tag, temperatures_K=[t0 + (t1 - t0) * i / (n - 1) for i in range(n)], use_temperatures=True)
-        run.value(step.step_id, "column", {"stages": n, "feed_stage": fstage, "reflux_ratio": rr, "top_pressure_Pa": p, "condenser": cond, "reboiler_spec": reb}, psrc)
+        self._temperature_estimates(node, tag, o, spec_feeds, n, p, dp, dist, btm)
+        run.value(step.step_id, "column", {"stages": n, "feed_stage": fstage, "reflux_ratio": rr, "top_pressure_Pa": p, "condenser": cond, "reboiler_spec": reb,
+                                           "solving_method": solver, "max_iterations": max_it}, psrc)
+        run.value(step.step_id, "column solver", solver, ssrc)
+
+    # ---- column helpers -----------------------------------------------------------------------
+    def _column_solver(self, node, o, column_type="Distillation"):
+        """(solver name, provenance): the person's override, the absorber rule, Naphtali-Sandholm for a feed that comes from a
+        liquid-liquid split (the bubble-point method does not converge on the water-saturated layer of a decanter), else the
+        server default Wang-Henke."""
+        step, run = node.step, self.run
+        if o.get("solving_method"):
+            return solver_name(o["solving_method"], step.step_id), "person"
+        if column_type == "Absorption":
+            return BURNINGHAM_OTTO, "rule: absorber"
+        if column_type == "Distillation":
+            lle = self._near_lle(node)
+            if lle:
+                run.assume(f"step {step.step_id}: column solver {NAPHTALI_SANDHOLM} (the feed is a liquid phase of the decanter {lle}, close to a "
+                           f"liquid-liquid split, where the bubble-point method does not converge)")
+                return NAPHTALI_SANDHOLM, f"rule: feed from the liquid-liquid split of step {lle}"
+        return WANG_HENKE, "server default"
+
+    def _near_lle(self, node):
+        """The step_id of a decanter whose liquid feeds this node, through units that keep the composition; else None."""
+        seen, frontier = set(), [e.from_step for e in node.inlets if not e.tear and e.from_step]
+        for _ in range(5):
+            nxt = []
+            for sid in frontier:
+                n = self.topo.nodes.get(sid)
+                if sid in seen or not n or not n.entry:
+                    continue
+                seen.add(sid)
+                if n.entry.recipe == "vessel_lle":
+                    return sid
+                if n.passthrough or n.entry.recipe in _TRANSPARENT:
+                    nxt += [e.from_step for e in n.inlets if not e.tear and e.from_step]
+            frontier = nxt
+            if not frontier:
+                break
+        return None
+
+    def _feed_state(self, stream, node):
+        """The solved state of a column feed; a stream the engine never calculated (zero molar flow, NaN fractions) is refused."""
+        r = self.c.try_call("dwsim_stream_get_results", flowsheet_id=self.run.fs, name=stream)
+        if not stream_solved(r):
+            raise Refused(f"feed {stream} is not solved (molar flow {(r or {}).get('molar_flow_mol_s')!r}, mass flow {(r or {}).get('mass_flow_kg_s')!r}): "
+                          f"a stream the engine never calculated, so no column specification can be derived from it", step_id=node.step.step_id,
+                          concept=node.entry.concept, what=stream,
+                          resolve="make the units upstream solve (see the refusal naming them), or give overrides.column.<step>.reboiler_spec as {type, value, units}")
+        return r
 
     def _bottoms_spec(self, node, feeds, dist, btm):
-        """Bottoms draw from the component lists: the components listed only in the bottoms outlet leave there."""
+        """Bottoms draw from the component lists: the components listed only in the bottoms outlet leave there, and so does
+        every feed compound the lists do not mention that boils above every bottoms-listed component (normal boiling points
+        from the engine); a compound without a boiling point is forced overhead and the assumption says so."""
         step, run = node.step, self.run
         top_e = next((e for e in node.outlets if e.stream == dist), None)
         bot_e = next((e for e in node.outlets if e.stream == btm), None)
-        if bot_e and bot_e.components:
-            heavy = [f for f in bot_e.components if not top_e or f not in top_e.components]
-            if heavy:
-                flow = 0.0
-                for f in feeds:
-                    r = self.c.try_call("dwsim_stream_get_results", flowsheet_id=run.fs, name=f["stream"])
-                    if not r:
-                        break
-                    comps = r["phases"][0]["compounds"]
-                    flow += sum(r["molar_flow_mol_s"] * comps.get(run.resolved.name(h), {}).get("mole_fraction", 0) for h in heavy)
-                else:
-                    if flow > 0:
-                        run.assume(f"step {step.step_id}: bottoms draw {flow:.4g} mol/s = feed flow of the components listed only in the bottoms ({', '.join(heavy)})")
-                        return {"type": "Product_Molar_Flow_Rate", "value": flow, "units": "mol/s"}
-        raise Refused("no reboiler specification can be derived (component lists overlap or the feed is unsolved)", step_id=step.step_id,
-                      resolve="overrides.column.<step>.reboiler_spec = {type, value, units, compound}")
+        if not (bot_e and bot_e.components):
+            raise Refused("no reboiler specification can be derived: the bottoms outlet lists no components", step_id=step.step_id,
+                          resolve="overrides.column.<step>.reboiler_spec = {type, value, units, compound}")
+        names = lambda comps: [run.resolved.name(f) for f in comps if f in run.resolved]  # noqa: E731
+        top_names, bot_names = names(top_e.components if top_e else []), names(bot_e.components)
+        heavy = [n for n in bot_names if n not in top_names]
+        states = [self._feed_state(f["stream"], node) for f in feeds]
+        in_feed = []
+        for r in states:
+            for k, v in r["phases"][0]["compounds"].items():
+                if v.get("mole_fraction", 0) > 1e-6 and k not in in_feed:
+                    in_feed.append(k)
+        unlisted = [k for k in in_feed if k not in top_names and k not in bot_names]
+        ref = max([t for t in (self._nbp(k) for k in bot_names) if t], default=None)
+        extra = [k for k in unlisted if ref is not None and self._nbp(k) is not None and self._nbp(k) > ref]
+        unknown = [k for k in unlisted if k not in extra and (ref is None or self._nbp(k) is None)]
+        draw = heavy + extra
+        if not draw:
+            raise Refused("no reboiler specification can be derived (every component listed in the bottoms is also listed in the distillate)",
+                          step_id=step.step_id, resolve="overrides.column.<step>.reboiler_spec = {type, value, units, compound}")
+        flow = sum(r["molar_flow_mol_s"] * r["phases"][0]["compounds"].get(k, {}).get("mole_fraction", 0) for r in states for k in draw)
+        if not flow > 0:
+            raise Refused(f"the solved feed carries none of the bottoms components ({', '.join(draw)}), so the bottoms draw would be zero",
+                          step_id=step.step_id, what=btm, resolve="overrides.column.<step>.reboiler_spec = {type, value, units, compound}")
+        text = f"step {step.step_id}: bottoms draw {flow:.4g} mol/s = feed flow of the components listed only in the bottoms ({', '.join(heavy) or 'none'})"
+        if extra:
+            text += " plus " + ", ".join(f"{k} (boils at {self._nbp(k) - 273.15:.0f} C, above every bottoms-listed component)" for k in extra) + \
+                    ", which the outlet lists do not mention"
+        if unknown:
+            text += f"; {', '.join(unknown)} in the feed is listed on neither outlet and has no boiling point to place it, so it is forced overhead"
+        run.assume(text + "; check this specification")
+        return {"type": "Product_Molar_Flow_Rate", "value": flow, "units": "mol/s"}
+
+    def _nbp(self, name):
+        """Normal boiling point K of a databank compound (dwsim_compound_get; the offline table as a fallback), None if unknown."""
+        if name not in self.nbp:
+            r = self.c.try_call("dwsim_compound_get", flowsheet_id=self.run.fs, name=name) or {}
+            t = r.get("normal_boiling_point_K")
+            self.nbp[name] = float(t) if isinstance(t, (int, float)) and t > 0 else NBP_OFFLINE.get(name)
+        return self.nbp[name]
+
+    def _temperature_estimates(self, node, tag, o, feeds, n, p, dp, dist, btm):
+        """A linear stage-temperature profile seeds the column solver (gold Fischer: 71 -> 118 C). Ends come from the document
+        slots (top_temperature / bottom_temperature) or the person (overrides.column.<step>.top_temperature_K / bottom_temperature_K);
+        a missing end is estimated from the feed's bubble or dew point (a flash on a scratch flowsheet) or from the boiling point
+        of the lightest / heaviest listed component, and reported as assumed."""
+        step, run, c, fs = node.step, self.run, self.c, self.run.fs
+        tt = o.get("top_temperature_K") or step.slots.get("top_temperature")
+        bt = o.get("bottom_temperature_K") or step.slots.get("bottom_temperature")
+        if not tt and not bt:
+            return
+        t0 = _mid(tt) if tt else None
+        t1 = _mid(bt) if bt else None
+        how = None
+        if t0 is None:
+            t0, how = self._end_estimate(node, feeds, p, "top", dist)
+            if t0 is None:
+                t0, how = t1 - 40.0, "taken 40 K below the stated bottom (no bubble point or boiling point available)"
+            if t0 > t1 - 5.0:
+                how += f"; held 5 K below the stated bottom ({t0 - 273.15:.0f} C would give a flat profile)"
+                t0 = t1 - 5.0
+        elif t1 is None:
+            t1, how = self._end_estimate(node, feeds, p + dp, "bottom", btm)
+            if t1 is None:
+                t1, how = t0 + 40.0, "taken 40 K above the stated top (no dew point or boiling point available)"
+            if t1 < t0 + 5.0:
+                how += f"; held 5 K above the stated top ({t1 - 273.15:.0f} C would give a flat profile)"
+                t1 = t0 + 5.0
+        if how:
+            run.assume(f"step {step.step_id}: column temperature estimates {t0 - 273.15:.0f} -> {t1 - 273.15:.0f} C: one end stated, the "
+                       f"{'top' if tt is None else 'bottom'} {how}")
+        c.call("dwsim_column_set_estimates", flowsheet_id=fs, name=tag, temperatures_K=[t0 + (t1 - t0) * i / (n - 1) for i in range(n)], use_temperatures=True)
+        run.value(step.step_id, "column temperature estimates K", [round(t0, 2), round(t1, 2)],
+                  "document slots" if not how and "top_temperature_K" not in o and "bottom_temperature_K" not in o else ("person" if not how else "one end stated, the other assumed"))
+
+    def _end_estimate(self, node, feeds, p, end, outlet):
+        """(T_K, how) for the missing end of a column's temperature profile: top = bubble point of the feed at p, bottom = boiling
+        point of the heaviest component listed in the bottoms; each falls back to the other method, then to None."""
+        run = self.run
+        edge = next((e for e in node.outlets if e.stream == outlet), None)
+        listed = [run.resolved.name(f) for f in (edge.components if edge else []) if f in run.resolved]
+        states = [self.c.try_call("dwsim_stream_get_results", flowsheet_id=run.fs, name=f["stream"]) for f in feeds]
+        states = [r for r in states if stream_solved(r)]
+        w = {}
+        for r in states:
+            m = r.get("mass_flow_kg_s") or 0
+            for k, v in r["phases"][0]["compounds"].items():
+                if v.get("mass_fraction", 0) > 0:
+                    w[k] = w.get(k, 0.0) + m * v["mass_fraction"]
+        in_feed = [k for k, v in w.items() if v > 0]
+
+        def by_nbp():
+            with_nbp = [(self._nbp(k), k) for k in (listed or in_feed) if self._nbp(k) is not None]
+            if not with_nbp:
+                return None, None
+            t, k = min(with_nbp) if end == "top" else max(with_nbp)
+            where = ("listed in the " + ("distillate" if end == "top" else "bottoms")) if listed else "of the feed"
+            return t, (f"the normal boiling point of {k} ({t - 273.15:.0f} C), the {'lightest' if end == 'top' else 'heaviest'} component {where}"
+                       + ("" if abs(p - 101325.0) < 5000 else f"; the column is at {p / 1e5:.2f} bar, not 1 atm"))
+
+        def by_flash():
+            t = self._flash_T(w, p, 0.0 if end == "top" else 1.0) if w else None
+            if not t:
+                return None, None
+            return t, f"the {'bubble' if end == 'top' else 'dew'} point of the feed at {p / 1e5:.2f} bar ({t - 273.15:.1f} C, engine flash)"
+
+        # the top of a column sits near the feed's bubble point; the bottom near the boiling point of the heaviest product
+        for method in ((by_flash, by_nbp) if end == "top" else (by_nbp, by_flash)):
+            t, how = method()
+            if t is not None:
+                return t, how
+        return None, None
+
+    def _scratch_fs(self):
+        """A second flowsheet with the same basis, for single-stream flashes (never touches the plant flowsheet)."""
+        if self._scratch is not None:
+            return self._scratch or None
+        run = self.run
+        r = self.c.try_call("dwsim_flowsheet_create", name=f"{run.plant.plant_id}-scratch")
+        if not r or not r.get("flowsheet_id"):
+            self._scratch = False
+            return None
+        try:
+            apply_basis(self.c, r["flowsheet_id"], run, run.resolved.names(), self.needs_lle, report=False)
+        except mcp.ToolError as e:
+            run.warn(f"scratch flowsheet for the bubble / dew point flashes not set up ({str(e)[:160]}); estimates fall back to boiling points")
+            self._scratch = False
+            return None
+        self._scratch = r["flowsheet_id"]
+        run.note("scratch", f"flowsheet {self._scratch} holds the single-stream bubble / dew point flashes behind the column temperature estimates")
+        return self._scratch
+
+    def _flash_T(self, mass_fractions, p, vf):
+        """Temperature K of the mixture at pressure p and molar vapour fraction vf (0 bubble, 1 dew), or None."""
+        fs = self._scratch_fs()
+        if not fs:
+            return None
+        self._scratch_n += 1
+        name = f"pt{self._scratch_n}"
+        if self.c.try_call("dwsim_stream_add_material", flowsheet_id=fs, name=name, pressure_Pa=p, vapor_fraction=vf, molar_flow_mol_s=1.0,
+                           composition={k: float(v) for k, v in mass_fractions.items()}) is None:
+            return None
+        r = self.c.try_call("dwsim_solve_run", flowsheet_id=fs, timeout_s=60)
+        res = self.c.try_call("dwsim_stream_get_results", flowsheet_id=fs, name=name) or {}
+        self.c.try_call("dwsim_object_delete", flowsheet_id=fs, target=name)
+        t = res.get("temperature_K")
+        if r and r.get("ok") and isinstance(t, (int, float)) and math.isfinite(t) and 150.0 < t < 900.0:
+            return float(t)
+        return None
+
+    def _close_scratch(self):
+        if self._scratch:
+            self.c.try_call("dwsim_flowsheet_close", flowsheet_id=self._scratch)
+            self._scratch = False
 
     def r_absorber(self, node, tag, column_type="Absorption"):
         step, run, plant, c, fs = node.step, self.run, self.run.plant, self.c, self.run.fs
@@ -410,8 +702,13 @@ class Builder:
         bot = bot or f"{step.step_id}.bottom"
         if column_type == "ReboiledAbsorber" and liq is None and gas is not None:
             liq, gas = gas, None  # a stripper with one liquid feed on top
-        c.call("dwsim_column_create", flowsheet_id=fs, name=tag, type=column_type, stages=n, top_pressure_Pa=p,
-               pressure_drop_Pa=o.get("pressure_drop_Pa", 0.0), solving_method="Burningham-Otto (Sum Rates)" if column_type == "Absorption" else "Wang-Henke (Bubble Point)")
+        solver, ssrc = self._column_solver(node, o, column_type)
+        create = {"flowsheet_id": fs, "name": tag, "type": column_type, "stages": n, "top_pressure_Pa": p, "pressure_drop_Pa": o.get("pressure_drop_Pa", 0.0),
+                  "solving_method": solver}
+        if o.get("max_iterations"):
+            create["max_iterations"] = int(o["max_iterations"])
+        c.call("dwsim_column_create", **create)
+        self.columns[tag] = {"step_id": step.step_id, "type": column_type, "solver": solver, "source": ssrc}
         for s in (top, bot):
             c.try_call("dwsim_stream_add_material", flowsheet_id=fs, name=s)
         feeds = []
@@ -429,7 +726,8 @@ class Builder:
             if not reb:
                 raise Refused("a stripper with one feed needs a reboiler specification", step_id=step.step_id, resolve="overrides.column.<step>.reboiler_spec")
             c.call("dwsim_column_set_specs", flowsheet_id=fs, name=tag, reboiler=reb)
-        run.value(step.step_id, column_type, {"stages": n, "top_pressure_Pa": p}, psrc or "assumed")
+        run.value(step.step_id, column_type, {"stages": n, "top_pressure_Pa": p, "solving_method": solver, "max_iterations": create.get("max_iterations")}, psrc or "assumed")
+        run.value(step.step_id, "column solver", solver, ssrc)
 
     def r_stripper(self, node, tag):
         live, _ = self._inlets(node)
@@ -737,3 +1035,33 @@ def _mid(v):
     if isinstance(v, (list, tuple)):
         return 0.5 * (v[0] + v[1])
     return float(v)
+
+
+def solver_name(text, step_id=None):
+    """A person's spelling of a column solver -> the name the server takes."""
+    t = str(text).strip().lower()
+    for key, full in _SOLVER_ALIASES:
+        if key in t:
+            return full
+    raise Refused(f"solving_method {text!r} is not a column solver", step_id=step_id, what="solving_method",
+                  resolve=f"one of '{WANG_HENKE}', '{NAPHTALI_SANDHOLM}', '{BURNINGHAM_OTTO}'")
+
+
+def _finite(v):
+    return isinstance(v, (int, float)) and math.isfinite(v)
+
+
+def stream_solved(r):
+    """True when dwsim_stream_get_results describes a calculated stream: a positive molar flow and finite mole fractions that
+    add up. A stream the engine never reached reads as zero molar flow (often with a default mass flow) or NaN fractions."""
+    if not isinstance(r, dict):
+        return False
+    flow = r.get("molar_flow_mol_s")
+    if not _finite(flow) or flow <= 0:
+        return False
+    try:
+        comps = r["phases"][0]["compounds"]
+    except (KeyError, IndexError, TypeError):
+        return False
+    fr = [v.get("mole_fraction") for v in comps.values()]
+    return bool(fr) and all(_finite(x) and x >= 0 for x in fr) and sum(fr) > 0.5

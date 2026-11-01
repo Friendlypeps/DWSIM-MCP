@@ -26,6 +26,7 @@ def _load(name):
 PERMANENT_GASES = set(_load("permanent_gases.json"))
 INCHIKEY_CAS = _load("inchikey_cas.json")
 KNOWN = _load("known_compounds.json")
+NBP_OFFLINE = {c["name"]: c["nbp"] for cands in KNOWN.values() for c in cands if c.get("nbp")}  # databank name -> normal boiling point K
 LLE_PAIRS = _load("lle_bips.json")["pairs"]
 
 _ELEM = re.compile(r"([A-Z][a-z]?)(\d*)")
@@ -212,21 +213,25 @@ def lle_pairs_for(names):
     return [p for p in LLE_PAIRS if p["c1"] in s and p["c2"] in s]
 
 
-def apply_basis(client, fs, run, names, needs_lle):
+def apply_basis(client, fs, run, names, needs_lle, report=True):
+    """Compounds, package, flash and pairs on a flowsheet. report=False applies the same basis to a second (scratch)
+    flowsheet without repeating the notes and assumptions already made for the plant."""
     pkg, why = package_for(names, needs_lle, run.plant.overrides.package)
     client.call("dwsim_thermo_add_compounds", flowsheet_id=fs, names=names)
     client.call("dwsim_thermo_set_property_package", flowsheet_id=fs, name=pkg)
-    run.note("package", f"{pkg}: {why}", source="person" if run.plant.overrides.package else "rule")
+    if report:
+        run.note("package", f"{pkg}: {why}", source="person" if run.plant.overrides.package else "rule")
     if needs_lle:
         client.call("dwsim_thermo_set_flash", flowsheet_id=fs, equilibrium_type="VLLE")
         est = client.try_call("dwsim_thermo_estimate_bips", flowsheet_id=fs)
-        if est and est.get("estimated"):
+        if report and est and est.get("estimated"):
             run.assume(f"NRTL pairs missing in the databank estimated by UNIFAC: {est.get('estimated')}")
         pairs = lle_pairs_for(names)
         if pairs:
             client.call("dwsim_thermo_set_bips", flowsheet_id=fs, pairs=[{k: p[k] for k in ("c1", "c2", "A12", "A21", "alpha12")} for p in pairs])
             for p in pairs:
-                run.assume(f"NRTL {p['c1']}/{p['c2']} pair replaced by one {p['source']} (A12 {p['A12']}, A21 {p['A21']}, alpha {p['alpha12']}): the databank pair gives no liquid split")
-        else:
+                if report:
+                    run.assume(f"NRTL {p['c1']}/{p['c2']} pair replaced by one {p['source']} (A12 {p['A12']}, A21 {p['A21']}, alpha {p['alpha12']}): the databank pair gives no liquid split")
+        elif report:
             run.warn("liquid-liquid recipe present but no regressed LLE pair in data/lle_bips.json for this basis; the databank VLE pairs may give one liquid in the decanter")
     return pkg

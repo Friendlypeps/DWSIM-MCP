@@ -41,7 +41,9 @@ order given and the report says so.
 with source `person`: `setpoints` (a value inside the window, needed when a bound is open), `reaction`
 (`keq`, `conversion_pct`, `kinetics`, `feed_conversion`, with a `source` sentence), `feeds` (amount,
 `excess`, `ratio_to` another feed, composition, T, p), `column` (stages, feed_stage, reflux_ratio,
-condenser_type, `reboiler_spec`, including `{"type": "feed_component_fraction", ...}`), `splits` for the
+condenser_type, pressure_drop_Pa, `reboiler_spec`, including `{"type": "feed_component_fraction", ...}`,
+`solving_method` (`Wang-Henke`, `Naphtali-Sandholm`, `Burningham-Otto`), `max_iterations`,
+`top_temperature_K` / `bottom_temperature_K` for the stage-temperature estimates), `splits` for the
 specified-split stand-ins, `split_ratios`, `loops` (`close`, `leave_open`), `compounds` (formula to databank
 name), `units` (free `dwsim_unitop_set` properties, `OutletVaporFraction`, `hot_outlet_T_K`,
 `rigorous_extractor`), `surrogates` (`reactive_distillation`), `package`, `windows`.
@@ -69,8 +71,23 @@ name), `units` (free `dwsim_unitop_set` properties, `OutletVaporFraction`, `hot_
 - **Feeds** (`feeds.py`): target kg/h → mol/s with the engine molar mass → educts by stoichiometry through
   the producing steps; utility streams need an amount; after the open-loop solve and again after the loops
   close, the derived feeds are scaled so the product meets the target.
+- **Columns** (`builder.py`, `r_column`): the flowsheet is solved before each column and a failure there is a
+  refusal naming the first unit that did not converge and its error (the column's feed is unsolved; a zero
+  draw derived from it is never sent). The solver is the person's `solving_method`, else Naphtali-Sandholm when
+  the feed is a liquid phase of a decanter (the bubble-point method does not converge on the water-saturated
+  layer), else the server default Wang-Henke; a Wang-Henke column that does not converge is switched to
+  Naphtali-Sandholm once and the stage solved again, reported as assumed. The bottoms draw from the component
+  lists counts the components listed only in the bottoms plus every feed compound the lists do not mention that
+  boils above all of them (normal boiling points from `dwsim_compound_get`); a compound without a boiling point is
+  forced overhead and the assumption says so. With one end of the temperature profile stated, the other is the
+  feed's bubble point (top) or the boiling point of the heaviest bottoms component (bottom), from a single-stream
+  flash on a scratch flowsheet or the boiling points, reported as assumed.
 - **Loops** (`recycles.py`): open-loop first; each tear seeded with `dwsim_recycle_seed`; closed one at a
   time (gas loops first); a loop that does not converge is reopened and reported with what leaves the plant.
+  A tear whose open-loop source has no solved state (zero flow, NaN composition) is not closed at all; a reopened
+  tear into a column is also removed from the column's own connection table (`SyncConnectedStreams`), without
+  which the engine refuses the column with "streams specified in the column connections window is missing"; when
+  the flowsheet does not solve after a reopen, the remaining loops are left open and the report says why.
 - **Operating range** (`sweep.py`, `--sweep` or `python3 -m openrun_sim sweep ... --report out/<plant>/report.json`
   on a flowsheet still on the server): the reaction steps' closed windows (`options.sweep_steps` for others) are swept
   with `dwsim_study_sweep`, three points each from the midpoint outwards, every point a full plant solve with the loops

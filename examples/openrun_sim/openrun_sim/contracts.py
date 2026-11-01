@@ -190,7 +190,8 @@ class Overrides:
     setpoints: Dict[str, Dict[str, float]] = field(default_factory=dict)      # step_id -> {temperature_K, pressure_Pa}
     splits: Dict[str, Dict[str, float]] = field(default_factory=dict)         # step_id -> {compound: percent to outlet 0}
     split_ratios: Dict[str, List[float]] = field(default_factory=dict)        # step_id -> splitter ratios
-    column: Dict[str, Dict[str, object]] = field(default_factory=dict)        # step_id -> {stages, feed_stage, reflux_ratio, reboiler_spec, condenser_type}
+    column: Dict[str, Dict[str, object]] = field(default_factory=dict)        # step_id -> {stages, feed_stage, reflux_ratio, reboiler_spec, condenser_type, pressure_drop_Pa,
+                                                                              #             solving_method, max_iterations, top_temperature_K, bottom_temperature_K}
     reaction: Dict[str, Dict[str, object]] = field(default_factory=dict)      # step_id -> {conversion_pct, keq, keq_basis, kinetics, feed_conversion, phase}
     feeds: Dict[str, Dict[str, object]] = field(default_factory=dict)         # stream name -> {molar_flow_mol_s, composition (mole fractions by formula or name), T_K, P_Pa, excess}
     surrogates: Dict[str, object] = field(default_factory=dict)               # {reactive_distillation: true}
