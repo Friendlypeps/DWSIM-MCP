@@ -1,0 +1,87 @@
+{
+ "setpoints": {
+  "U2a": {
+   "pressure_Pa": 150000
+  },
+  "U2b": {
+   "pressure_Pa": 150000
+  },
+  "U4": {
+   "temperature_K": 358.15
+  }
+ },
+ "reaction": {
+  "U4": {
+   "keq": 4.0,
+   "keq_basis": "molar fraction",
+   "source": "document: 'equilibrium constant about 4'"
+  }
+ },
+ "feeds": {
+  "ETOH": {
+   "excess": 1.1
+  },
+  "WATER-ADD": {
+   "molar_flow_mol_s": 0.5
+  }
+ },
+ "column": {
+  "U5": {
+   "stages": 12,
+   "feed_stage": 9,
+   "reflux_ratio": 3.0,
+   "pressure_drop_Pa": 10000,
+   "reboiler_spec": {
+    "type": "Product_Molar_Flow_Rate",
+    "value": 1.0,
+    "units": "mol/s"
+   }
+  },
+  "U8": {
+   "stages": 12,
+   "feed_stage": 6,
+   "reflux_ratio": 3.0,
+   "pressure_drop_Pa": 5000,
+   "reboiler_spec": {
+    "type": "Component_Fraction",
+    "value": 0.01,
+    "units": "Mass",
+    "compound": "Water"
+   }
+  },
+  "U11": {
+   "stages": 10,
+   "feed_stage": 5,
+   "reflux_ratio": 2.0,
+   "pressure_drop_Pa": 5000,
+   "reboiler_spec": {
+    "type": "feed_component_fraction",
+    "compound": "H2O",
+    "fraction": 0.95
+   }
+  }
+ },
+ "split_ratios": {
+  "U7s": [
+   0.5,
+   0.5
+  ]
+ },
+ "loops": {
+  "close": [
+   "RCY-ACID"
+  ],
+  "leave_open": [
+   "ORG-REFLUX",
+   "RCY-AZEO",
+   "RCY-ETOH"
+  ]
+ },
+ "units": {
+  "U5": {
+   "InternalLoopTolerance": 0.001,
+   "ExternalLoopTolerance": 0.001
+  }
+ },
+ "_comment": "What the Opus document does not state, as in gold_plants/etoac_fischer_llm_opus.py: pump discharge, reactor at 85 C inside its window, K = 4 as the document says ('about 4', so stated, not a placeholder), 10 % ethanol excess, 0.5 mol/s water to the decanter, stage counts and reflux ratios, the drying column at 1 wt% water in the bottoms, 95 % of the aqueous water to the wastewater, the organic phase split in half, and the three loops that did not converge headless left open."
+}

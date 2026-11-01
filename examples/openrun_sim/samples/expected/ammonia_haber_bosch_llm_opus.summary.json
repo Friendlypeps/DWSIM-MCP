@@ -1,0 +1,12 @@
+{
+  "_note": "Tolerances from gold_plants/RESULTS.md plant 8 (Opus Haber-Bosch): secondary reformer 950-1000 C, converter outlet 15-20 % NH3 (engine gives 23 % at 450 C / 200 bar with Gibbs K), product near -33 C at storage pressure.",
+  "product_ratio_tolerance": 0.05,
+  "min_purity_mass": 0.98,
+  "loops_closed": 1,
+  "loops_open": 0,
+  "streams": {
+    "U4-OUT": {"T_C": [950, 25]},
+    "U13-OUT": {"T_C": [450, 1], "x": {"Ammonia": [0.231, 0.03]}},
+    "NH3-PRODUCT": {"T_C": [-36, 6], "x": {"Ammonia": [0.994, 0.01]}}
+  }
+}

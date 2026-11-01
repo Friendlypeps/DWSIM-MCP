@@ -1,0 +1,83 @@
+{
+ "_comment_feeds": "natural gas is the derived feed (scaled to the target); steam, air and the hydrogen recycle are given per mol of natural gas (gold run: S/C 3.0, air 1.40 for H2:N2 = 3, 2 % hydrogen) and follow it",
+ "feeds": {
+  "NATGAS": {
+   "T_K": 298.15,
+   "P_Pa": 3000000
+  },
+  "H2-RECYCLE": {
+   "ratio_to": {
+    "stream": "NATGAS",
+    "mol_per_mol": 0.02
+   },
+   "P_Pa": 3000000
+  },
+  "STEAM": {
+   "ratio_to": {
+    "stream": "NATGAS",
+    "mol_per_mol": 3.0
+   },
+   "T_K": 648.15,
+   "P_Pa": 3000000
+  },
+  "AIR": {
+   "ratio_to": {
+    "stream": "NATGAS",
+    "mol_per_mol": 1.4
+   },
+   "composition": {
+    "O2": 0.21,
+    "N2": 0.78,
+    "Ar": 0.01
+   },
+   "P_Pa": 3000000
+  }
+ },
+ "setpoints": {
+  "U3": {
+   "temperature_K": 1073.15,
+   "pressure_Pa": 3000000
+  },
+  "U13": {
+   "temperature_K": 723.15,
+   "pressure_Pa": 20000000
+  },
+  "U12": {
+   "pressure_Pa": 19500000
+  },
+  "U14": {
+   "temperature_K": 258.15
+  }
+ },
+ "reaction": {
+  "U4a": {
+   "conversion_pct": 100,
+   "source": "document: oxygen fully consumed in the combustion zone"
+  },
+  "U11": {
+   "conversion_pct": 100,
+   "source": "document: CO and CO2 removed to ppm by methanation"
+  }
+ },
+ "splits": {
+  "U9": {
+   "CO2": 99.9
+  }
+ },
+ "split_ratios": {
+  "U15p": [
+   0.97,
+   0.03
+  ]
+ },
+ "units": {
+  "U13": {
+   "DeltaP": 500000
+  }
+ },
+ "loops": {
+  "close": [
+   "RECYCLE-GAS"
+  ]
+ }
+}

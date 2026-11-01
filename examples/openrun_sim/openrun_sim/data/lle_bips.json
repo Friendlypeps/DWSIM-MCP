@@ -1,0 +1,6 @@
+{
+  "_note": "NRTL pairs regressed to liquid-liquid data, written with dwsim_thermo_set_bips when both compounds are in the basis and a decanter or extractor exists. A12/A21 in cal/mol. The ethyl acetate / water pair is regressed to the mutual solubilities at 25 C (8.0 wt% ester in water, 3.3 wt% water in ester); the databank pair is VLE-fitted and gives no split (gold_plants/RESULTS.md finding 1).",
+  "pairs": [
+    {"c1": "Ethyl acetate", "c2": "Water", "A12": 349.75, "A21": 2176.38, "alpha12": 0.2, "source": "regressed to handbook mutual solubilities at 25 C"}
+  ]
+}

@@ -6,6 +6,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using DWSIM.Automation.FluentAPI;
 using DWSIM.Interfaces;
 using DWSIM.Interfaces.Enums;
 using DWSIM.Interfaces.Enums.GraphicObjects;
@@ -132,6 +133,14 @@ namespace DWSIM.MCPServer.Tools.Logical
             if (source == null || target == null) throw new ArgumentException("source and target are required.");
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentException("expression is required (use X for the source value).");
 
+            return CreateSpec(fs, name, source.Value<string>("object"), source.Value<string>("property"),
+                              target.Value<string>("object"), target.Value<string>("property"), expression, min, max, calc_mode);
+        }
+
+        /// <summary>Creates or reconfigures a Spec block; shared with the heat-exchanger surrogate.</summary>
+        internal static JObject CreateSpec(FluentFlowsheet fs, string name, string sourceTag, string sourceProp, string targetTag, string targetProp,
+                                           string expression, double? min = null, double? max = null, string calc_mode = null)
+        {
             var existing = fs.Inner.SimulationObjects.Values.FirstOrDefault(o => o.GraphicObject?.Tag == name);
             Spec spec;
             if (existing == null)
@@ -141,8 +150,8 @@ namespace DWSIM.MCPServer.Tools.Logical
             }
             else spec = existing as Spec ?? throw new ArgumentException($"'{name}' exists and is a {existing.GraphicObject.ObjectType}, not a Spec.");
 
-            var svInfo = Links.Describe(fs, source.Value<string>("object"), source.Value<string>("property"), mustBeWritable: false, out var svObj);
-            var tvInfo = Links.Describe(fs, target.Value<string>("object"), target.Value<string>("property"), mustBeWritable: true, out var tvObj);
+            var svInfo = Links.Describe(fs, sourceTag, sourceProp, mustBeWritable: false, out var svObj);
+            var tvInfo = Links.Describe(fs, targetTag, targetProp, mustBeWritable: true, out var tvObj);
             Links.AttachSpec(spec, svObj, SpecVarType.Source, svInfo);
             Links.AttachSpec(spec, tvObj, SpecVarType.Target, tvInfo);
             spec.Expression = expression;
@@ -167,6 +176,51 @@ namespace DWSIM.MCPServer.Tools.Logical
                 ["calc_mode"] = spec.SpecCalculationMode.ToString(),
                 ["source_value"] = Json.Num(Links.ValueOf(fs, spec.SourceObjectData)),
                 ["target_value"] = Json.Num(Links.ValueOf(fs, spec.TargetObjectData)),
+            };
+        }
+
+        [McpTool("dwsim_recycle_seed",
+            "Seed a Recycle block's outlet (the tear stream) with the state of a solved stream, normally the stream " +
+            "that feeds the Recycle after an open-loop solve: temperature, pressure, molar flow and composition. A " +
+            "new stream is 1 kg/s equimolar at 25 C, and a loop whose first pass sees that converges slowly or to a " +
+            "contaminated state. Call after the open-loop solve, before closing the loop.")]
+        public JObject RecycleSeed(
+            [McpParam("Flowsheet handle")] string flowsheet_id,
+            [McpParam("Recycle block tag")] string name,
+            [McpParam("Solved stream to copy from (default: the Recycle's own inlet stream)", Required = false)] string from_stream = null)
+        {
+            var fs = _sessions.GetFlowsheet(flowsheet_id);
+            var rec = Find.As<Recycle>(fs, name, "Recycle block");
+            var g = rec.GraphicObject;
+            IMaterialStream src;
+            if (!string.IsNullOrWhiteSpace(from_stream)) src = Find.As<IMaterialStream>(fs, from_stream, "stream");
+            else
+            {
+                var c = g.InputConnectors.Count > 0 ? g.InputConnectors[0] : null;
+                var other = c != null && c.IsAttached ? c.AttachedConnector?.AttachedFrom : null;
+                if (other == null || !fs.Inner.SimulationObjects.TryGetValue(other.Name, out var so) || !(so is IMaterialStream ms))
+                    throw new ArgumentException($"'{name}' has no inlet stream; name from_stream.");
+                src = ms;
+            }
+            var oc = g.OutputConnectors.Count > 0 ? g.OutputConnectors[0] : null;
+            var outOther = oc != null && oc.IsAttached ? oc.AttachedConnector?.AttachedTo : null;
+            if (outOther == null || !fs.Inner.SimulationObjects.TryGetValue(outOther.Name, out var dstObj) || !(dstObj is IMaterialStream dst))
+                throw new ArgumentException($"'{name}' has no outlet stream attached; connect the Recycle's product stream first.");
+            double flow = src.GetMolarFlow();
+            if (!(flow > 0)) throw new ArgumentException($"'{(src as ISimulationObject).GraphicObject.Tag}' has no flow; solve the open loop first.");
+            var comp = src.Phases[0].Compounds.Values.ToDictionary(c => c.Name, c => c.MassFraction.GetValueOrDefault());
+            var dstTag = (dst as ISimulationObject).GraphicObject.Tag;
+            var b = fs.MaterialStream(dstTag);
+            b.WithTemperature(src.GetTemperature().Kelvin());
+            b.WithPressure(src.GetPressure().Pascal());
+            b.WithComposition(cb => { foreach (var kv in comp) if (kv.Value > 0) cb.Mass(kv.Key, kv.Value); });
+            b.WithMolarFlow(flow.MolPerSecond());
+            fs.Inner.ResetCalculationStatus();
+            return new JObject
+            {
+                ["recycle"] = name, ["seeded_stream"] = dstTag, ["from"] = (src as ISimulationObject).GraphicObject.Tag,
+                ["temperature_K"] = src.GetTemperature(), ["pressure_Pa"] = src.GetPressure(), ["molar_flow_mol_s"] = flow,
+                ["mass_fractions"] = new JObject(comp.Where(kv => kv.Value > 0).Select(kv => new JProperty(kv.Key, kv.Value))),
             };
         }
 

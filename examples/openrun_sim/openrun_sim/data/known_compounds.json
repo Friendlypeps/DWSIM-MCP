@@ -1,0 +1,20 @@
+{
+  "_note": "Offline table for validate/map without a server: Hill formula -> candidates {name (databank), mw g/mol, cas}. The live run always asks dwsim_thermo_resolve_compound; this table only lets the offline commands reason about the samples.",
+  "C2H4O2": [{"name": "Acetic acid", "mw": 60.052, "cas": "64-19-7"}, {"name": "Methyl formate", "mw": 60.052, "cas": "107-31-3"}],
+  "C2H6O": [{"name": "Ethanol", "mw": 46.069, "cas": "64-17-5"}, {"name": "Dimethyl ether", "mw": 46.069, "cas": "115-10-6"}],
+  "C4H8O2": [{"name": "Ethyl acetate", "mw": 88.106, "cas": "141-78-6"}, {"name": "Butyric acid", "mw": 88.106, "cas": "107-92-6"}, {"name": "1,4-Dioxane", "mw": 88.106, "cas": "123-91-1"}],
+  "H2O": [{"name": "Water", "mw": 18.015, "cas": "7732-18-5"}],
+  "C2H4O": [{"name": "Acetaldehyde", "mw": 44.053, "cas": "75-07-0"}, {"name": "Ethylene oxide", "mw": 44.053, "cas": "75-21-8"}],
+  "H2": [{"name": "Hydrogen", "mw": 2.016, "cas": "1333-74-0"}],
+  "N2": [{"name": "Nitrogen", "mw": 28.013, "cas": "7727-37-9"}],
+  "O2": [{"name": "Oxygen", "mw": 31.999, "cas": "7782-44-7"}],
+  "Ar": [{"name": "Argon", "mw": 39.948, "cas": "7440-37-1"}],
+  "CH4": [{"name": "Methane", "mw": 16.043, "cas": "74-82-8"}],
+  "CO": [{"name": "Carbon monoxide", "mw": 28.010, "cas": "630-08-0"}],
+  "CO2": [{"name": "Carbon dioxide", "mw": 44.010, "cas": "124-38-9"}],
+  "H3N": [{"name": "Ammonia", "mw": 17.031, "cas": "7664-41-7"}],
+  "NH3": [{"name": "Ammonia", "mw": 17.031, "cas": "7664-41-7"}],
+  "C2H4": [{"name": "Ethylene", "mw": 28.054, "cas": "74-85-1"}],
+  "CH4O": [{"name": "Methanol", "mw": 32.042, "cas": "67-56-1"}],
+  "C4H10O": [{"name": "Diethyl ether", "mw": 74.123, "cas": "60-29-7"}, {"name": "1-Butanol", "mw": 74.123, "cas": "71-36-3"}]
+}

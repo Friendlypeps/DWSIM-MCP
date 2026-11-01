@@ -68,6 +68,9 @@ namespace DWSIM.MCPServer
             new Tools.Study.StudyTools(sessions),
             new Tools.Objects.ObjectTools(sessions),
             new Tools.Io.IoTools(sessions),
+            new Tools.Thermo.CompoundResolveTools(sessions, automation),
+            new Tools.HeatExchangers.HeatExchangerTools(sessions),
+            new Tools.Plant.PlantTools(sessions),
         };
 
         public static ToolRegistry BuildRegistry(SessionManager sessions, Automation3 automation, DynamicsJobManager dynamicsJobs)

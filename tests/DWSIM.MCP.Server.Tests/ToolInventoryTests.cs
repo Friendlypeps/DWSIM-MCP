@@ -59,6 +59,8 @@ namespace DWSIM.MCP.Server.Tests
                 "dwsim_compound_import_json", "dwsim_adjust_create", "dwsim_spec_create", "dwsim_recycle_configure",
                 "dwsim_study_sweep", "dwsim_object_get", "dwsim_object_set", "dwsim_object_invoke", "dwsim_object_describe",
                 "dwsim_flowsheet_export_xml", "dwsim_flowsheet_get_xml_section", "dwsim_script_run",
+                "dwsim_thermo_resolve_compound", "dwsim_hx_configure", "dwsim_hx_tie_halves", "dwsim_plant_report",
+                "dwsim_plant_balance", "dwsim_plant_check", "dwsim_reaction_from_equation", "dwsim_recycle_seed",
             };
             var missing = expected.Where(n => !names.Contains(n)).ToList();
             Assert.True(missing.Count == 0, "Missing: " + string.Join(", ", missing));

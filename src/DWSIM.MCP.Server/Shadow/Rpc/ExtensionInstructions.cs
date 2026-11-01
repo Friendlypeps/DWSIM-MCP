@@ -49,6 +49,19 @@ namespace DWSIM.MCPServer.Rpc
             "dwsim_object_invoke calls a method; dwsim_object_list_properties lists the PROP_* ids used by adjust, spec and " +
             "sweep. Prefer the typed tools; after any object_set run dwsim_flowsheet_check. dwsim_object_delete removes an object.\n\n" +
             "FILES: dwsim_flowsheet_export_xml writes the complete XML to a path (dwsim_flowsheet_get_xml truncates at 500000 " +
-            "characters); dwsim_flowsheet_get_xml_section returns one section or one object's XML.";
+            "characters); dwsim_flowsheet_get_xml_section returns one section or one object's XML.\n\n" +
+            "PLANTS FROM A DOCUMENT: dwsim_thermo_resolve_compound turns a formula + name + CAS into the one databank name " +
+            "(an InChIKey is echoed only: the databanks carry no InChI; 'ambiguous' and 'conflict' are answers, ask for the " +
+            "name or CAS rather than guessing). dwsim_reaction_from_equation builds a reaction from '2 Ethanol -> Ethyl " +
+            "acetate + 2 Hydrogen' with the element balance checked and the model chosen from the data given (conversion_pct, " +
+            "keq, lnkeq_expression, Arrhenius pairs; nothing given and phase Vapor -> Gibbs; nothing given and Liquid is " +
+            "refused: pass a labelled placeholder yourself). dwsim_hx_configure sets a HeatExchanger by what is specified " +
+            "(specify_hot_outlet, specify_cold_outlet, specify_duty, specify_ua, pinch) and refuses a temperature cross; " +
+            "dwsim_hx_tie_halves builds the heater + cooler + Spec surrogate for an exchanger whose sides lie across a loop. " +
+            "dwsim_recycle_seed copies the open-loop solution into a Recycle outlet before the loop closes. After the solve: " +
+            "dwsim_plant_report (every stream, every duty with its sign, product vs asked), dwsim_plant_balance (mass, " +
+            "per-compound and per-element closure; open_loops quantifies loops left open), dwsim_plant_check (pump fed vapour, " +
+            "compressor fed liquid, reactor outlet phase, caller windows, unconverged units and recycles). A Mixer that joins " +
+            "both outlets of a reactor doubles the solver's calculation-order paths; use the vapour outlet of a gas-phase reactor.";
     }
 }

@@ -7,7 +7,7 @@ binary-parameter control, user compounds, Adjust/Spec blocks, parameter sweeps, 
 reflection escape hatch.
 
 It is a **drop-in replacement** for `ghcr.io/danwbr/dwsim-mcp`: same entrypoint, same endpoints,
-every upstream tool name unchanged, plus 43 more (101 tools in all).
+every upstream tool name unchanged, plus 51 more (109 tools in all).
 
 ```sh
 docker run -d --name dwsim-mcp -p 5901:5901 ghcr.io/friendlypeps/dwsim-mcp:10.2
@@ -40,10 +40,20 @@ them.
 | Studies | `dwsim_study_list_variables`, `dwsim_study_sweep` | 1-D / 2-D parameter sweeps with a results table |
 | Escape hatch | `dwsim_object_describe`, `dwsim_object_get`, `dwsim_object_set`, `dwsim_object_invoke`, `dwsim_object_list_properties`, `dwsim_object_delete`, `dwsim_script_run` | any public property, field or method of any live engine object, by path; flowsheet scripts |
 | Files | `dwsim_flowsheet_export_xml`, `dwsim_flowsheet_get_xml_section` | the complete XML (no 500 000-character cut), or one section / one object |
+| Compound resolution | `dwsim_thermo_resolve_compound` | a document's formula + name + CAS (InChIKey echoed only: the 10.2 databanks carry no InChI) to the one databank name; `ambiguous`, `conflict`, `not_found` are answers, never a guess |
+| Heat exchangers | `dwsim_hx_configure`, `dwsim_hx_tie_halves` | the two-sided HeatExchanger by what is specified (outlet T, duty, UA, pinch), with the temperature-cross check; the heater + cooler + Spec surrogate for an exchanger inside a loop |
+| Reaction from the equation | `dwsim_reaction_from_equation` | `2 Ethanol -> Ethyl acetate + 2 Hydrogen` with the element balance checked and the model chosen from the data given (conversion, K, ln K(T), Arrhenius, or Gibbs for a gas phase); it never invents a number |
+| Plant | `dwsim_plant_report`, `dwsim_plant_balance`, `dwsim_plant_check`, `dwsim_recycle_seed` | every stream and signed duty in one call, mass / per-compound / per-element closure with loops left open quantified, the checks the engine does not make (pump fed vapour, compressor fed liquid, reactor outlet phase, operating windows), a Recycle outlet seeded from the open-loop solution |
 
 Reactive distillation is **not** available in DWSIM 10.2 (the rigorous column has no reactive-stage
 model); `dwsim_column_create` refuses it with that explanation so a model can report the reactor +
 column surrogate honestly.
+
+`examples/gold_plants/` simulates nine reference plants with these tools (results in its `RESULTS.md`);
+`examples/openrun_sim/` is a Python builder that takes a plant in the open-run contract (process steps with
+vocabulary concepts, Hill formulas, windows, module ranges) and runs it end to end: concept to recipe,
+formula to databank name, equation to reaction model, windows to setpoints, loops closed one at a time,
+and a report with the provenance of every number.
 
 The handshake `instructions` tell an MCP client when to use which tool. Print the tool names with
 `dwsim-mcp --list-tools`.

@@ -1,0 +1,20 @@
+{
+  "_comment": "Three things the brief says a run must refuse, never guess: an open bound (pump pressure 'at least 2 bar'), an ambiguous formula (C2H6O with no name or CAS), and a concept without a unit (Crystallisation).",
+  "plant_id": "refusals",
+  "target": {"product_formula": "C4H8O2", "product_name": "Ethyl acetate", "rate_kg_h": 100.0},
+  "process_steps": [
+    {"step_id": "S1", "order": 1, "kind": "UNIT_OPERATION", "label": "feed pump", "unit_operation": "Pumping", "p_window": "",
+     "streams_in": [{"stream": "FEED", "components": ["C2H6O"], "role": "feed", "step": ""}],
+     "streams_out": [{"stream": "FEED-P", "components": ["C2H6O"], "role": "intermediate", "step": "S2", "port": "out"}]},
+    {"step_id": "S2", "order": 2, "kind": "UNIT_PROCESS", "label": "esterification", "unit_operation": "Esterification",
+     "equation": "C2H4O2 + C2H6O <-> C4H8O2 + H2O", "educts": ["C2H4O2", "C2H6O"], "produces": ["C4H8O2", "H2O"], "t_window": "70 to 80 degC", "p_window": "1 atm",
+     "substances": [{"formula": "C2H4O2", "name": "acetic acid", "role": "educt"}],
+     "streams_in": [{"stream": "FEED-P", "components": ["C2H6O"], "role": "intermediate", "step": "S1"}, {"stream": "ACID", "components": ["C2H4O2"], "role": "feed", "step": ""}],
+     "streams_out": [{"stream": "RX-OUT", "components": ["C2H4O2", "C2H6O", "C4H8O2", "H2O"], "role": "intermediate", "step": "S3", "port": "out"}]},
+    {"step_id": "S3", "order": 3, "kind": "UNIT_OPERATION", "label": "crystalliser", "unit_operation": "Crystallisation",
+     "streams_in": [{"stream": "RX-OUT", "components": ["C2H4O2", "C2H6O", "C4H8O2", "H2O"], "role": "intermediate", "step": "S2"}],
+     "streams_out": [{"stream": "PRODUCT", "components": ["C4H8O2"], "role": "product", "step": "", "port": "solid"}]}
+  ],
+  "requirements": [{"step_id": "S1", "pressure": {"min_si": 200000, "max_si": null}}],
+  "flowsheet": {"steps": [], "connections": []}
+}

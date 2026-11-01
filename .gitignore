@@ -14,3 +14,4 @@ TestResults/
 examples/gold_plants/logs/
 examples/gold_plants/out/*_stage*.dwxmz
 __pycache__/
+examples/openrun_sim/out/

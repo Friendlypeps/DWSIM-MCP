@@ -1,0 +1,20 @@
+{
+  "_note": "Labelled placeholders and assumed values the brief says a document rarely states. Every use is reported as PLACEHOLDER or ASSUMED with this file as the source.",
+  "placeholder_conversion_pct": 98.0,
+  "placeholder_keq_molar_fraction": 4.0,
+  "equilibrium_type_concepts": ["Esterification", "Acetylation", "Carboxylation", "Hydrolysis", "TishchenkoReaction", "Dehydrogenation", "Reaction", "StirredTankReaction", "HomogeneousGasReaction", "FixedBedReaction", "TubularReaction", "GauzeReaction", "SlurryReaction"],
+  "irreversible_concepts": ["Hydrogenation", "Oxidation", "Nitration"],
+  "column_stages": 12,
+  "column_feed_stage_fraction": 0.5,
+  "column_reflux_ratio": 3.0,
+  "column_pressure_drop_Pa": 10000.0,
+  "pump_discharge_Pa": 150000.0,
+  "compressor_efficiency": 0.75,
+  "feed_temperature_K": 298.15,
+  "feed_pressure_Pa": 101325.0,
+  "evaporator_vapor_fraction": 0.5,
+  "decanter_water_makeup_mol_per_mol_feed": 0.0,
+  "recycle_max_iterations": 100,
+  "solve_timeout_s": 600,
+  "loop_tolerance_rel": 0.01
+}

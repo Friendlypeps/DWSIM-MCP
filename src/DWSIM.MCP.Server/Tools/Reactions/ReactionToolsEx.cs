@@ -362,6 +362,126 @@ namespace DWSIM.MCPServer.Tools.Reactions
 
         // ------------------------------------------------------------------ helpers
 
+        [McpTool("dwsim_reaction_from_equation",
+            "Define a reaction from a balanced equation written with databank names, e.g. '2 Ethanol -> Ethyl acetate + " +
+            "2 Hydrogen' or 'Acetic acid + Ethanol <-> Ethyl acetate + Water', and the data the document states: " +
+            "conversion_pct -> conversion reaction; keq (with keq_basis) or lnkeq_expression -> equilibrium; a_forward and " +
+            "e_forward (optionally reverse) -> kinetic; nothing stated and phase Vapor -> equilibrium with K from the " +
+            "Gibbs energies of formation; nothing stated and phase Liquid -> refused (the caller must pass a labelled " +
+            "placeholder; this tool never invents a number). The phase must be given. Compounds must already be in the " +
+            "flowsheet. Returns the reaction and model_chosen.")]
+        public JObject FromEquation(
+            [McpParam("Flowsheet handle")] string flowsheet_id,
+            [McpParam("Reaction name, unique in the flowsheet")] string name,
+            [McpParam("Equation with databank names; arrows -> => <-> <=> = are accepted")] string equation,
+            [McpParam("Reacting phase: Liquid or Vapor (Mixture allowed for conversion)")] string phase,
+            [McpParam("Base compound (default: the first reactant)", Required = false)] string base_compound = null,
+            [McpParam("Conversion of the base compound in % (conversion reaction)", Required = false, JsonType = "number")] double? conversion_pct = null,
+            [McpParam("Constant equilibrium constant (equilibrium reaction)", Required = false, JsonType = "number")] double? keq = null,
+            [McpParam("Basis of keq: molar fraction (default), activity, fugacity, partial pressure, molar concentration, mass concentration, mass fraction", Required = false)] string keq_basis = null,
+            [McpParam("ln(Keq) as an expression in T (K)", Required = false)] string lnkeq_expression = null,
+            [McpParam("Arrhenius pre-exponential factor, forward", Required = false, JsonType = "number")] double? a_forward = null,
+            [McpParam("Activation energy, forward (e_forward_unit, default J/mol)", Required = false, JsonType = "number")] double? e_forward = null,
+            [McpParam("Energy unit: J/mol, kJ/mol, cal/mol, kcal/mol, BTU/lbmol", Required = false)] string e_forward_unit = null,
+            [McpParam("Arrhenius pre-exponential factor, reverse", Required = false, JsonType = "number")] double? a_reverse = null,
+            [McpParam("Activation energy, reverse", Required = false, JsonType = "number")] double? e_reverse = null,
+            [McpParam("Reaction set id (default DefaultSet; created if missing)", Required = false)] string reaction_set = "DefaultSet",
+            [McpParam("Lower temperature limit, K", Required = false, JsonType = "number")] double? tmin_K = null,
+            [McpParam("Upper temperature limit, K", Required = false, JsonType = "number")] double? tmax_K = null,
+            [McpParam("Description", Required = false)] string description = "")
+        {
+            var fs = _sessions.GetFlowsheet(flowsheet_id);
+            if (string.IsNullOrWhiteSpace(equation)) throw new ArgumentException("Give the equation.");
+            if (Canonical(phase) == null || string.IsNullOrWhiteSpace(phase))
+                throw new ArgumentException("Give the reacting phase explicitly: Liquid, Vapor (or Mixture for a conversion reaction).");
+
+            var parsed = ParseEquation(fs, equation);
+            var stoichJson = new JObject(parsed.Select(kv => new JProperty(kv.Key, kv.Value)));
+            var firstReactant = parsed.First(kv => kv.Value < 0).Key;
+            var baseC = string.IsNullOrWhiteSpace(base_compound) ? firstReactant : Find.Compound(fs, base_compound).Name;
+            var stoich = Validate(fs, name, stoichJson, baseC, phase);
+
+            string model;
+            IReaction r;
+            bool kinetic = a_forward.HasValue && e_forward.HasValue;
+            if (conversion_pct.HasValue)
+            {
+                if (conversion_pct <= 0 || conversion_pct > 100) throw new ArgumentException("conversion_pct is between 0 and 100.");
+                r = fs.DefineConversionReaction(name, stoich, baseC, Canonical(phase), conversion_pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), description ?? "");
+                model = "conversion";
+            }
+            else if (kinetic)
+            {
+                var b = Basis(null);
+                r = fs.DefineKineticReaction(name, stoich, Orders(stoich, null, true), Orders(stoich, null, false), baseC, Canonical(phase), b, "mol/m3", "mol/[m3.s]",
+                                             a_forward.Value, e_forward.Value, a_reverse ?? 0.0, e_reverse ?? 0.0, "", "", description ?? "");
+                r.E_Forward_Unit = EnergyUnit(e_forward_unit); r.E_Reverse_Unit = EnergyUnit(e_forward_unit);
+                model = "kinetic";
+            }
+            else if (keq.HasValue || !string.IsNullOrWhiteSpace(lnkeq_expression))
+            {
+                var b = string.IsNullOrWhiteSpace(keq_basis) ? "molar fraction" : keq_basis.Trim().ToLowerInvariant();
+                if (!Bases.Contains(b)) throw new ArgumentException($"'{keq_basis}' is not an equilibrium basis. Use one of: {string.Join(", ", Bases)}.");
+                r = fs.DefineEquilibriumReaction(name, stoich, baseC, Canonical(phase), b, "", lnkeq_expression ?? "", 0.0, description ?? "");
+                if (keq.HasValue)
+                {
+                    if (keq.Value <= 0) throw new ArgumentException("keq must be positive.");
+                    r.KExprType = KOpt.Constant; r.ConstantKeqValue = keq.Value; model = "equilibrium_constant";
+                }
+                else { r.KExprType = KOpt.Expression; model = "equilibrium_expression"; }
+            }
+            else if (string.Equals(Canonical(phase), "Vapor", StringComparison.OrdinalIgnoreCase))
+            {
+                r = fs.DefineEquilibriumReaction(name, stoich, baseC, Canonical(phase), "fugacity", "", "", 0.0, description ?? "");
+                r.KExprType = KOpt.Gibbs; model = "equilibrium_gibbs";
+            }
+            else
+            {
+                throw new ArgumentException("No conversion, equilibrium constant or kinetics were given and the phase is not Vapor: a Gibbs-energy K is " +
+                                            "only sound for the gas phase. Pass the document's conversion or K, or a labelled placeholder from the caller.");
+            }
+            if (tmin_K.HasValue || tmax_K.HasValue) { CheckRange(tmin_K, tmax_K); if (tmin_K.HasValue) r.Tmin = tmin_K.Value; if (tmax_K.HasValue) r.Tmax = tmax_K.Value; }
+
+            var o = AddToSet(fs, r, string.IsNullOrWhiteSpace(reaction_set) ? "DefaultSet" : reaction_set, 0);
+            o["model_chosen"] = model;
+            o["equation_parsed"] = new JObject
+            {
+                ["reactants"] = new JObject(parsed.Where(kv => kv.Value < 0).Select(kv => new JProperty(kv.Key, -kv.Value))),
+                ["products"] = new JObject(parsed.Where(kv => kv.Value > 0).Select(kv => new JProperty(kv.Key, kv.Value))),
+            };
+            o["placeholder"] = false;
+            return o;
+        }
+
+        /// <summary>"2 A + B -> C + 3 D" with databank names into {name: coefficient}, reactants negative.</summary>
+        private static Dictionary<string, double> ParseEquation(FluentFlowsheet fs, string equation)
+        {
+            var eq = equation.Replace("\u2192", "->").Replace("\u21cc", "<->").Replace("\u21c4", "<->");
+            string[] arrows = { "<->", "<=>", "->", "=>", "→", "⇌", "=" };
+            string arrow = arrows.FirstOrDefault(a => eq.Contains(a));
+            if (arrow == null) throw new ArgumentException("The equation needs an arrow between reactants and products (->, <->, =).");
+            var sides = eq.Split(new[] { arrow }, 2, StringSplitOptions.None);
+            var result = new Dictionary<string, double>();
+            void Side(string text, double sign)
+            {
+                foreach (var raw in System.Text.RegularExpressions.Regex.Split(text, @"\s\+\s|^\+\s|\s\+$"))
+                {
+                    var term = raw.Trim();
+                    if (term.Length == 0) continue;
+                    var m = System.Text.RegularExpressions.Regex.Match(term, @"^(?<c>\d+(\.\d+)?)\s+(?<n>.+)$");
+                    double coeff = 1; string nm = term;
+                    if (m.Success) { coeff = double.Parse(m.Groups["c"].Value, System.Globalization.CultureInfo.InvariantCulture); nm = m.Groups["n"].Value.Trim(); }
+                    var cp = Find.Compound(fs, nm);
+                    if (result.ContainsKey(cp.Name) && Math.Sign(result[cp.Name]) != Math.Sign(sign))
+                        throw new ArgumentException($"'{cp.Name}' appears on both sides of the equation.");
+                    result[cp.Name] = result.GetValueOrDefault(cp.Name) + sign * coeff;
+                }
+            }
+            Side(sides[0], -1); Side(sides[1], +1);
+            if (!result.Values.Any(v => v < 0) || !result.Values.Any(v => v > 0)) throw new ArgumentException("The equation needs at least one reactant and one product.");
+            return result;
+        }
+
         private static IReaction Reaction(FluentFlowsheet fs, string name)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name the reaction.");

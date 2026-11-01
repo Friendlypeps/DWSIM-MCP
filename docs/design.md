@@ -66,6 +66,28 @@ indices raw. `tests/.../ShadowDriftTests.cs` holds the hashes of the upstream or
   scripts copy the open-loop solution into it).
 - **Units.** A new headless flowsheet's `SelectedUnitSystem` is DWSIM's default (C, bar, kW), not
   SI. `GetPropertyValue(prop)` without a unit system returns SI. The tools state the units they take.
+- **Compound identity.** The 10.2.12 databanks carry no InChI or InChIKey (the loader reads a SMILES for
+  429 ChemSep compounds and nothing else), so a key cannot be matched server-side; `dwsim_thermo_resolve_compound`
+  echoes it and decides by Hill formula (computed from `Elements`, because ChemSep stores structural formulas
+  such as `CH3CH2OH` while the DWSIM databank stores Hill), name and CAS. `Automation3.AvailableCompounds`
+  deduplicates by name only, so the same substance under two databases is grouped by CAS as an alias.
+- **Heat exchanger.** Inlet i feeds outlet i; which inlet is hot is decided by temperature at solve time;
+  the settings are CLR members (`CalculationMode`, `HotSideOutletTemperature`, `ColdSideOutletTemperature`,
+  `Q`, `Area`, `OverallCoefficient`, `MITA`, `FlowDir`). A Heater and a Cooler tied by a Spec block (the
+  heater's heat added copied into the cooler's heat removed) stand in for an exchanger whose two sides lie
+  in different places of a loop.
+- **Checks the engine does not make.** The compressor only warns on a liquid inlet, the equilibrium reactor
+  never checks that its reaction phase exists at the outlet, and energy streams carry an unsigned
+  `EnergyFlow` whose sign is the side they are attached to; `dwsim_plant_check` and `dwsim_plant_report`
+  supply all three. `FlowsheetDiagnostics` lives in the read-only upstream engine, so the plant findings are
+  rendered by the tool in the same `{code, severity, object, message, fix}` shape.
+- **Calculation order budget.** `FlowsheetSolver.GetSolvingList` walks *upstream* from every terminal
+  stream level by level and counts every object visit; above 10 000 visits it throws "Infinite loop detected
+  while obtaining flowsheet object calculation order" even for a loop-free flowsheet. A merge point whose
+  two inlets come from the same upstream object (a Mixer joining a reactor's vapour and liquid outlets)
+  doubles the number of paths behind it, so seven such mixers in a 60-object chain exceed the budget. The
+  open-run builder therefore takes a gas-phase reactor's vapour outlet directly and merges only liquid-phase
+  reactors.
 
 ## Verification
 
