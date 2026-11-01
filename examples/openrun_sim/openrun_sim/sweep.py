@@ -27,8 +27,11 @@ def operating_range(builder, points=5, timeout_s=120):
             if not r:
                 out.append({"step_id": step_id, "unit": tag, "quantity": q, "window": [rng.min_si, rng.max_si], "error": "sweep failed"})
                 continue
-            pts = r.get("points", r.get("results", []))
-            ok_vals = [p.get("inputs", p.get("values", {})) for p in pts if p.get("ok", p.get("solved", True))]
+            rows = r.get("rows", [])
+            pts = [{"value_si": row["inputs"][0], "solved": bool(row.get("solved")), "error": row.get("error"),
+                    "product_kg_s": (row.get("outputs") or [None])[0], "product_mol_s": (row.get("outputs") or [None, None])[1]} for row in rows]
+            ok = [p["value_si"] for p in pts if p["solved"]]
             out.append({"step_id": step_id, "unit": tag, "quantity": q, "property": spec["property"], "window": [rng.min_si, rng.max_si], "sources": sources,
-                        "points": pts, "solved_points": len(ok_vals), "total_points": len(pts)})
+                        "points": pts, "solved_points": len(ok), "total_points": len(pts),
+                        "solved_range": [min(ok), max(ok)] if ok else None})
     return out

@@ -8,7 +8,7 @@ from .reactions import DEFAULTS
 
 def close_loops(builder, mode="auto"):
     run, c, fs, plant = builder.run, builder.c, builder.run.fs, builder.run.plant
-    tears = [e for e in builder.topo.tears() if e.tear]
+    tears = [e for e in builder.topo.tears() if e.tear and not getattr(e, "closed", False)]
     lo = plant.overrides.loops or {}
     leave = set(lo.get("leave_open", []))
     order = list(lo.get("close", []))
@@ -82,3 +82,16 @@ def _reopen(builder, e):
 def _is_column_balance_error(r):
     t = str(r.get("errors") or "").lower()
     return "balance" in t or "mass" in t
+
+
+def close_now(builder, e):
+    """Close one tear during the build (overrides.loops.close_early); kept closed even if this staged solve fails."""
+    run = builder.run
+    ok, why = _close_one(builder, e, builder.tear_targets[e.stream])
+    e.closed = True
+    entry = {"stream": e.stream, "recycle": f"RCY-{e.stream}", "to_step": e.to_step, "closed_early": True}
+    if not ok:
+        entry["converged"] = False
+        entry["reason"] = why
+        run.warn(f"loop {e.stream} closed early but not converged yet: {why}")
+    run.loops_closed.append(entry)

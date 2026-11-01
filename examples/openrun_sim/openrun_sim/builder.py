@@ -114,6 +114,18 @@ class Builder:
             run.windows.append(w)
         self._resolve_deferred_hx(node)
         self.touch()
+        self._close_early(node)
+
+    def _close_early(self, node):
+        """Loops named in overrides.loops.close_early are closed as soon as both ends exist: a column whose
+        feed only makes sense with its recycle (the Fischer acid loop) cannot be solved open first."""
+        early = set((self.run.plant.overrides.loops or {}).get("close_early", []))
+        if not early:
+            return
+        from .recycles import close_now
+        for e in node.outlets:
+            if e.tear and e.stream in early and e.stream in self.tear_targets and not getattr(e, "closed", False):
+                close_now(self, e)
 
     # inlets / outlets helpers
     def _inlets(self, node):
@@ -682,6 +694,11 @@ class Builder:
             for f in run.feeds:
                 if f["derived"] or f.get("ratio_to"):
                     c.call("dwsim_stream_set_conditions", flowsheet_id=run.fs, name=f["stream"], molar_flow_mol_s=f["mol_s"])
+            # the closed loops' tear streams hold the old solution: scale them too, or the recycles start 1/ratio off
+            for lp in run.loops_closed:
+                rs = c.try_call("dwsim_stream_get_results", flowsheet_id=run.fs, name=lp["stream"] + "-R")
+                if rs and rs.get("molar_flow_mol_s", 0) > 0:
+                    c.try_call("dwsim_stream_set_conditions", flowsheet_id=run.fs, name=lp["stream"] + "-R", molar_flow_mol_s=rs["molar_flow_mol_s"] * ratio)
             self.touch()
             r = self.solve(f"feeds scaled x{ratio:.4g} to the target ({label})")
             if not r.get("ok"):

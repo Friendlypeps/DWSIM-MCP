@@ -68,7 +68,7 @@
   ]
  },
  "loops": {
-  "close": [
+  "close_early": [
    "RCY-ACID"
   ],
   "leave_open": [
