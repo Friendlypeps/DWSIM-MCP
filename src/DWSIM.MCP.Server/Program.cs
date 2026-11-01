@@ -76,6 +76,19 @@ namespace DWSIM.MCPServer
 
             Console.Error.WriteLine($"[dwsim-mcp] Registered {registry.ListTools().Count} tools");
 
+            // Warm the engine once before serving: the first flowsheet fills static registries (unit-operation types,
+            // property-package catalogue) without a lock, and two dwsim_flowsheet_create calls arriving together on a
+            // cold process raced into "An item with the same key has already been added" inside the engine.
+            try
+            {
+                var warm = sessions.CreateFlowsheet("warm-up");
+                sessions.CloseFlowsheet(warm);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[dwsim-mcp] warm-up flowsheet failed: {ex.Message}");
+            }
+
             ITransport transport = mode == "http"
                 ? new HttpSseTransport(dispatcher, port, token, host)
                 : new StdioTransport(dispatcher);

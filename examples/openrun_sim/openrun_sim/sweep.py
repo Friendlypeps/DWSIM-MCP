@@ -5,12 +5,19 @@ operating range the report states.
 from .setpoints import windows_for
 
 
-def operating_range(builder, points=5, timeout_s=120):
+def operating_range(builder, points=None, timeout_s=None):
+    """Sweeps the steps named in options.sweep_steps (default: the reaction steps), options.sweep_points per window
+    (default 3), options.sweep_timeout_s per point (default 90): each point is a full plant solve with the loops closed."""
     run, c, fs, plant = builder.run, builder.c, builder.run.fs, builder.run.plant
+    points = points or int(plant.options.get("sweep_points", 3))
+    timeout_s = timeout_s or int(plant.options.get("sweep_timeout_s", 90))
+    wanted = plant.options.get("sweep_steps") or [s.step_id for s in plant.process_steps if s.equation]
     out = []
     prod = run.product_stream
     watches = [{"object": prod, "property": "PROP_MS_2"}, {"object": prod, "property": "PROP_MS_3"}] if prod else []
     for step_id, tag in run.units.items():
+        if step_id not in wanted:
+            continue
         step = plant.step(step_id)
         wins = windows_for(plant, step)
         vars_ = c.try_call("dwsim_study_list_variables", flowsheet_id=fs, object=tag)

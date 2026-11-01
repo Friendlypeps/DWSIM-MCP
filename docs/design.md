@@ -81,6 +81,10 @@ indices raw. `tests/.../ShadowDriftTests.cs` holds the hashes of the upstream or
   `EnergyFlow` whose sign is the side they are attached to; `dwsim_plant_check` and `dwsim_plant_report`
   supply all three. `FlowsheetDiagnostics` lives in the read-only upstream engine, so the plant findings are
   rendered by the tool in the same `{code, severity, object, message, fix}` shape.
+- **Cold-start race.** The first flowsheet a process creates fills static engine registries without a lock;
+  two `dwsim_flowsheet_create` calls arriving together on a cold server raced into "An item with the same key
+  has already been added. Key: Absorption/Extraction Column". `Program.cs` creates and closes one flowsheet
+  before the transport starts.
 - **Calculation order budget.** `FlowsheetSolver.GetSolvingList` walks *upstream* from every terminal
   stream level by level and counts every object visit; above 10 000 visits it throws "Infinite loop detected
   while obtaining flowsheet object calculation order" even for a loop-free flowsheet. A merge point whose
